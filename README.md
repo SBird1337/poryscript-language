@@ -14,8 +14,6 @@ At this basic stage it supports basic Syntax Highlighting
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
 
  * Initial release, support basic syntax highlighting
