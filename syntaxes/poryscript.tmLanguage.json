@@ -1,0 +1,68 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "PoryScript",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#tokens"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.poryscript",
+					"match": "\\b(if|while|return|else|elif|end|break|continue|switch|case|local|global)\\b"
+				},
+				{
+					"name": "keyword.other.poryscript",
+					"match": "\\b(var|flag|defeated|format|script|text|movement|mapscripts)\\b"
+				}
+			]
+		},
+		"tokens": {
+			"patterns": [
+				{
+					"name": "keyword.operator",
+					"match": "\\b(\\*|<=|<|>=|>|==|!=|!)\\b"
+				},
+				{
+					"name": "constant.numeric",
+					"match": "\\b(0x[0-9a-fA-F]+|[0-9]+)\\b"
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.poryscript",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.poryscript",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name":"comment.line.double-slash",
+					"match": "(//).*$\n?"
+				},
+				{
+					"name":"comment.line.number-sign",
+					"match": "(#).*$\n?"
+				}
+			]
+		}
+	},
+	"scopeName": "source.pory"
+}

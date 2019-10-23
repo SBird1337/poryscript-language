@@ -1,0 +1,25 @@
+{
+    "name": "poryscript",
+    "displayName": "PoryScript",
+    "description": "Syntax highlighting for PoryScript script language",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.39.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "poryscript",
+            "aliases": ["PoryScript", "poryscript"],
+            "extensions": [".pory"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "poryscript",
+            "scopeName": "source.pory",
+            "path": "./syntaxes/poryscript.tmLanguage.json"
+        }]
+    }
+}
