@@ -1,6 +1,6 @@
-# PoryScript Language Extension
+# Poryscript Language Extension
 
-This is a basic language extension for PoryScript. (https://github.com/huderlem/poryscript)
+This is a basic language extension for Poryscript. (https://github.com/huderlem/poryscript)
 
 At this basic stage it supports basic Syntax Highlighting
 
