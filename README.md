@@ -6,7 +6,7 @@ At this basic stage it supports basic Syntax Highlighting
 
 ## Requirements
 
- * Visual Studio Code
+ * Visual Studio Code 1.31.1 (January 2019)
 
 ## Known Issues
 
