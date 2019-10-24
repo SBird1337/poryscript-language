@@ -13,6 +13,9 @@
 		},
 		{
 			"include": "#comments"
+		},
+		{
+			"include": "#sections"
 		}
 	],
 	"repository": {
@@ -24,7 +27,7 @@
 				},
 				{
 					"name": "keyword.other.poryscript",
-					"match": "\\b(var|flag|defeated|format|script|text|movement|mapscripts)\\b"
+					"match": "\\b(var|flag|defeated|format|script|text|movement|mapscripts|raw)\\b"
 				}
 			]
 		},
@@ -37,6 +40,10 @@
 				{
 					"name": "constant.numeric",
 					"match": "\\b(0x[0-9a-fA-F]+|[0-9]+)\\b"
+				},
+				{
+					"name": "constant.language.poryscript",
+					"match": "\\b(true|false|TRUE|FALSE)\\b"
 				}
 			]
 		},
@@ -60,6 +67,15 @@
 				{
 					"name":"comment.line.number-sign",
 					"match": "(#).*$\n?"
+				}
+			]
+		},
+		"sections": {
+			"patterns": [
+				{
+					"name": "string.other.poryscript",
+					"begin": "`",
+					"end": "`"
 				}
 			]
 		}
