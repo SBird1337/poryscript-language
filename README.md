@@ -14,6 +14,11 @@ At this basic stage it supports basic Syntax Highlighting
 
 ## Release Notes
 
+Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
+
+### 1.1.0
+ * Minor Fixes and Improvements.
+
 ### 1.0.0
 
  * Initial release, support basic syntax highlighting
