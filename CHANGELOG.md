@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Extension requires Visual Studio Code version ^1.31.1 (was ^1.39.0)
+- Extension requires Visual Studio Code version `^1.31.1` (was `^1.39.0`)
 - Scope name changed to `pory`
 
 ### Fixed
