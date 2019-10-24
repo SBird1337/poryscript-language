@@ -1,27 +1,36 @@
 {
-    "name": "poryscript",
-    "displayName": "Poryscript",
-    "description": "Syntax highlighting for Poryscript script language",
-    "version": "1.0.0",
-    "publisher": "karathan",
-    "repository": "https://github.com/SBird1337/poryscript-language",
-    "engines": {
-        "vscode": "^1.31.1"
-    },
-    "categories": [
-        "Programming Languages"
+  "name": "poryscript",
+  "displayName": "Poryscript",
+  "description": "Syntax highlighting for Poryscript script language",
+  "version": "1.1.0",
+  "publisher": "karathan",
+  "repository": "https://github.com/SBird1337/poryscript-language",
+  "engines": {
+    "vscode": "^1.31.1"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "poryscript",
+        "aliases": [
+          "Poryscript",
+          "poryscript"
+        ],
+        "extensions": [
+          ".pory"
+        ],
+        "configuration": "./language-configuration.json"
+      }
     ],
-    "contributes": {
-        "languages": [{
-            "id": "poryscript",
-            "aliases": ["Poryscript", "poryscript"],
-            "extensions": [".pory"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "poryscript",
-            "scopeName": "source.pory",
-            "path": "./syntaxes/poryscript.tmLanguage.json"
-        }]
-    }
+    "grammars": [
+      {
+        "language": "poryscript",
+        "scopeName": "source.pory",
+        "path": "./syntaxes/poryscript.tmLanguage.json"
+      }
+    ]
+  }
 }
