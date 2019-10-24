@@ -22,11 +22,11 @@
 		"keywords": {
 			"patterns": [
 				{
-					"name": "keyword.control.poryscript",
+					"name": "keyword.control.pory",
 					"match": "\\b(if|while|return|else|elif|end|break|continue|switch|case|local|global)\\b"
 				},
 				{
-					"name": "keyword.other.poryscript",
+					"name": "keyword.other.pory",
 					"match": "\\b(var|flag|defeated|format|script|text|movement|mapscripts|raw)\\b"
 				}
 			]
@@ -34,26 +34,26 @@
 		"tokens": {
 			"patterns": [
 				{
-					"name": "keyword.operator",
+					"name": "keyword.operator.pory",
 					"match": "\\b(\\*|<=|<|>=|>|==|!=|!)\\b"
 				},
 				{
-					"name": "constant.numeric",
+					"name": "constant.numeric.pory",
 					"match": "\\b(0x[0-9a-fA-F]+|[0-9]+)\\b"
 				},
 				{
-					"name": "constant.language.poryscript",
+					"name": "constant.language.pory",
 					"match": "\\b(true|false|TRUE|FALSE)\\b"
 				}
 			]
 		},
 		"strings": {
-			"name": "string.quoted.double.poryscript",
+			"name": "string.quoted.double.pory",
 			"begin": "\"",
 			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.poryscript",
+					"name": "constant.character.escape.pory",
 					"match": "\\\\."
 				}
 			]
@@ -61,11 +61,11 @@
 		"comments": {
 			"patterns": [
 				{
-					"name":"comment.line.double-slash",
+					"name":"comment.line.double-slash.pory",
 					"match": "(//).*$\n?"
 				},
 				{
-					"name":"comment.line.number-sign",
+					"name":"comment.line.number-sign.pory",
 					"match": "(#).*$\n?"
 				}
 			]
@@ -73,7 +73,7 @@
 		"sections": {
 			"patterns": [
 				{
-					"name": "string.other.poryscript",
+					"name": "string.other.pory",
 					"begin": "`",
 					"end": "`"
 				}
