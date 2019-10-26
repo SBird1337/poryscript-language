@@ -23,7 +23,7 @@
 			"patterns": [
 				{
 					"name": "keyword.control.pory",
-					"match": "\\b(if|while|return|else|elif|end|break|continue|switch|case|local|global)\\b"
+					"match": "\\b(if|while|return|else|elif|end|break|continue|switch|case)\\b"
 				},
 				{
 					"name": "keyword.other.poryscript",
@@ -82,16 +82,18 @@
 		"symbols": {
 			"patterns": [
 				{
-					"begin": "\\b(script|text|movement|mapscripts)\\b\\s+(\\w+)\\s*",
-					"beginCaptures": {
+					"match": "\\b(script|text|movement|mapscripts)\\s*\\(*(local|global)*\\)*\\s*(\\w*)\\s*",
+					"captures": {
 						"1": {
-							"name": "keyword.other.poryscript"
+							"name": "keyword.other.pory"
 						},
 						"2": {
-							"name": "entity.name.function.poryscript"
+							"name": "keyword.other.pory"
+						},
+						"3": {
+							"name": "entity.name.function.pory"
 						}
-					},
-					"end": "\\{"
+					}
 				}
 			]
 		}
