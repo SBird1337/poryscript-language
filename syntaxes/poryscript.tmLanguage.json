@@ -3,7 +3,7 @@
 	"name": "Poryscript",
 	"patterns": [
 		{
-			"include": "#keywords"
+			"include": "#symbols"
 		},
 		{
 			"include": "#tokens"
@@ -13,6 +13,9 @@
 		},
 		{
 			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
 		}
 	],
 	"repository": {
@@ -24,7 +27,7 @@
 				},
 				{
 					"name": "keyword.other.poryscript",
-					"match": "\\b(var|flag|defeated|format|script|text|movement|mapscripts)\\b"
+					"match": "\\b(var|flag|defeated|format)\\b"
 				}
 			]
 		},
@@ -60,6 +63,22 @@
 				{
 					"name":"comment.line.number-sign",
 					"match": "(#).*$\n?"
+				}
+			]
+		},
+		"symbols": {
+			"patterns": [
+				{
+					"begin": "\\b(script|text|movement|mapscripts)\\b\\s+(\\w+)\\s*",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other.poryscript"
+						},
+						"2": {
+							"name": "entity.name.function.poryscript"
+						}
+					},
+					"end": "\\{"
 				}
 			]
 		}
