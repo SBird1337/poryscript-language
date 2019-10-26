@@ -3,7 +3,7 @@
 	"name": "Poryscript",
 	"patterns": [
 		{
-			"include": "#keywords"
+			"include": "#symbols"
 		},
 		{
 			"include": "#tokens"
@@ -15,7 +15,7 @@
 			"include": "#comments"
 		},
 		{
-			"include": "#sections"
+			"include": "#keywords"
 		}
 	],
 	"repository": {
@@ -26,8 +26,8 @@
 					"match": "\\b(if|while|return|else|elif|end|break|continue|switch|case|local|global)\\b"
 				},
 				{
-					"name": "keyword.other.pory",
-					"match": "\\b(var|flag|defeated|format|script|text|movement|mapscripts|raw)\\b"
+					"name": "keyword.other.poryscript",
+					"match": "\\b(var|flag|defeated|format)\\b"
 				}
 			]
 		},
@@ -76,6 +76,22 @@
 					"name": "string.other.pory",
 					"begin": "`",
 					"end": "`"
+				}
+			]
+		},
+		"symbols": {
+			"patterns": [
+				{
+					"begin": "\\b(script|text|movement|mapscripts)\\b\\s+(\\w+)\\s*",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other.poryscript"
+						},
+						"2": {
+							"name": "entity.name.function.poryscript"
+						}
+					},
+					"end": "\\{"
 				}
 			]
 		}
