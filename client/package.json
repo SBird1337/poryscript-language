@@ -1,0 +1,25 @@
+{
+    "name": "poryscript-language-client",
+    "description": "Client part of the VS Code Poryscript Language Extension",
+    "author": "karathan",
+    "license": "MIT",
+    "version": "1.0.0",
+    "publisher": "karathan",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/SBird1337/poryscript-language"
+    },
+    "engines": {
+        "vscode": "^1.31.1"
+    },
+    "scripts": {
+        "update-vscode": "vscode-install",
+        "postinstall": "vscode-install"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^5.2.1"
+    },
+	"devDependencies": {
+		"vscode": "^1.1.35"
+	}
+}
