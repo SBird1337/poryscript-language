@@ -14,8 +14,15 @@ import {
 	DidChangeConfigurationNotification,
 	CompletionItem,
 	CompletionItemKind,
-	TextDocumentPositionParams
+	TextDocumentPositionParams,
+	InsertTextFormat,
 } from 'vscode-languageserver';
+import { stringify } from 'querystring';
+
+let sp = require('synchronized-promise');
+
+// TypeScript type for caching the script command intelliSense
+type Command = { documentation?: string, detail?: string, kind?: CompletionItemKind, insertText?: string};
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -31,7 +38,6 @@ let hasDiagnosticRelatedInformationCapability: boolean = false;
 
 connection.onInitialize((params: InitializeParams) => {
 	let capabilities = params.capabilities;
-
 	// Does the client support the `workspace/configuration` request?
 	// If not, we will fall back using global settings
 	hasConfigurationCapability = !!(
@@ -45,7 +51,6 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities.textDocument.publishDiagnostics &&
 		capabilities.textDocument.publishDiagnostics.relatedInformation
 	);
-
 	return {
 		capabilities: {
 			textDocumentSync: documents.syncKind,
@@ -70,34 +75,121 @@ connection.onInitialized(() => {
 });
 
 // The example settings
-interface ExampleSettings {
-	maxNumberOfProblems: number;
+interface PoryScriptSettings {
+	commandIncludes: Array<string>;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ExampleSettings = defaultSettings;
+const defaultSettings: PoryScriptSettings = { commandIncludes: ["asm/macros/event.inc"] };
+let globalSettings: PoryScriptSettings = defaultSettings;
 
 // Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
+let documentSettings: Map<string, Thenable<PoryScriptSettings>> = new Map();
+let documentCommands: Map<string, Thenable<Map<string, Command>>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
 		// Reset all cached document settings
 		documentSettings.clear();
 	} else {
-		globalSettings = <ExampleSettings>(
+		globalSettings = <PoryScriptSettings>(
 			(change.settings.languageServerPoryscript || defaultSettings)
 		);
 	}
-
+	// Scan for commands in each document
+	documents.all().forEach(updateCommandsForDocument);
 	// Revalidate all open text documents
 	documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+async function scanForCommands(resource: string) : Promise<Map<string, Command>>
+{
+	let commands = new Map<string, Command>();
+
+	commands.set('script', {
+		detail: "Script (Poryscript)",
+		kind: CompletionItemKind.Class,
+		insertText: "script ${0:MyScript} {\n    \n}"
+	});
+	commands.set('movement', {
+		detail: "Movement (Poryscript)",
+		kind: CompletionItemKind.Class,
+		insertText: "movement ${0:MyMovement} {\n    \n}"
+	});
+	commands.set('mapscripts', {
+		detail: "Mapscript Section (Poryscript)",
+		kind: CompletionItemKind.Class,
+		insertText: "mapscripts ${0:MyMapscripts} {\n    \n}"
+	});
+	commands.set('text', {
+		detail: "Text (Poryscript)",
+		kind: CompletionItemKind.Class,
+		insertText: "text ${0:MyString} {\n    \n}"
+	});
+	commands.set('raw', {
+		detail: "Raw Section (Poryscript)",
+		kind: CompletionItemKind.Class,
+		insertText: "raw `\n$0\n`"
+	});
+	commands.set('local', {
+		detail: "Local Section (Poryscript)",
+		kind: CompletionItemKind.Keyword
+	});
+	commands.set('global', {
+		detail: "Global Section (Poryscript)",
+		kind: CompletionItemKind.Keyword
+	});
+	commands.set('format', {
+		detail: "Format String",
+		kind: CompletionItemKind.Function,
+		insertText: "format(\"$0\")"
+	});
+	commands.set('var', {
+		detail: "Get the value of a variable",
+		kind: CompletionItemKind.Function,
+		insertText: "var(${0:VAR_ID})"
+	});
+	commands.set('flag', {
+		detail: "Get the value of a flag",
+		kind: CompletionItemKind.Function,
+		insertText: "flag(${0:FLAG_ID})"
+	});
+	commands.set('defeated', {
+		detail: "Get the status of a trainer", kind: CompletionItemKind.Function,
+		insertText: "defeated(${0:TRAINER_ID})"
+	});
+	commands.set('if', {});
+	commands.set('elif', {});
+	commands.set('else', {});
+	commands.set('while', {});
+	commands.set('switch', {});
+	commands.set('case', {});
+	commands.set('break', {});
+	commands.set('continue', {});
+	return commands;
+}
+
+function getOrScanDocumentCommands(resource: string): Thenable<Map<string, Command>> {
+	let result = documentCommands.get(resource);
+	if(!result) {
+		result = scanForCommands(resource);
+	}
+	return result;
+}
+
+async function updateCommandsForDocument(textDocument: TextDocument) : Promise<void> {
+	await getOrScanDocumentCommands(textDocument.uri);
+}
+
+function getOrScanDocumentCommandsSync(resource: string): Map<string, Command> {
+	let syncFunc = sp(getOrScanDocumentCommands);
+	return syncFunc(resource);
+}
+
+
+function getDocumentSettings(resource: string): Thenable<PoryScriptSettings> {
 	if (!hasConfigurationCapability) {
 		return Promise.resolve(globalSettings);
 	}
@@ -114,6 +206,7 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 
 // Only keep settings for open documents
 documents.onDidClose(e => {
+	documentCommands.delete(e.document.uri);
 	documentSettings.delete(e.document.uri);
 });
 
@@ -126,7 +219,6 @@ documents.onDidChangeContent(change => {
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// In this simple example we get the settings for every validate run.
 	let settings = await getDocumentSettings(textDocument.uri);
-
 	// The validator creates diagnostics for all uppercase words length 2 and more
 	let text = textDocument.getText();
 	let pattern = /\b[A-Z]{2,}\b/g;
@@ -134,7 +226,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	let problems = 0;
 	let diagnostics: Diagnostic[] = [];
-	while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
+	while ((m = pattern.exec(text))) {
 		problems++;
 		let diagnostic: Diagnostic = {
 			severity: DiagnosticSeverity.Warning,
@@ -175,24 +267,30 @@ connection.onDidChangeWatchedFiles(_change => {
 	connection.console.log('We received an file change event');
 });
 
+//doc?
+function commandToCompletionItem(id: string, command: Command) : CompletionItem {
+	let item : CompletionItem = {
+		label: id,
+		kind: command.kind || CompletionItemKind.Keyword,
+		documentation: command.documentation || "",
+		detail: command.detail || ""
+	};
+	if(command.insertText) {
+		item.insertText = command.insertText;
+		item.insertTextFormat = InsertTextFormat.Snippet;
+	}
+	
+	return item;
+}
+
 // This handler provides the initial list of the completion items.
 connection.onCompletion(
 	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
 		// The pass parameter contains the position of the text document in
 		// which code complete got requested. For the example we ignore this
 		// info and always provide the same completion items.
-		return [
-			{
-				label: 'TypeScript',
-				kind: CompletionItemKind.Text,
-				data: 1
-			},
-			{
-				label: 'JavaScript',
-				kind: CompletionItemKind.Text,
-				data: 2
-			}
-		];
+		let commands = getOrScanDocumentCommandsSync(_textDocumentPosition.textDocument.uri);
+		return Array.from(commands).map(([key,value]) => commandToCompletionItem(key,value));
 	}
 );
 
@@ -200,18 +298,12 @@ connection.onCompletion(
 // the completion list.
 connection.onCompletionResolve(
 	(item: CompletionItem): CompletionItem => {
-		if (item.data === 1) {
-			item.detail = 'TypeScript details';
-			item.documentation = 'TypeScript documentation';
-		} else if (item.data === 2) {
-			item.detail = 'JavaScript details';
-			item.documentation = 'JavaScript documentation';
-		}
+		item.preselect
 		return item;
 	}
 );
 
-/*
+
 connection.onDidOpenTextDocument((params) => {
 	// A text document got opened in VSCode.
 	// params.textDocument.uri uniquely identifies the document. For documents store on disk this is a file URI.
@@ -229,7 +321,7 @@ connection.onDidCloseTextDocument((params) => {
 	// params.textDocument.uri uniquely identifies the document.
 	connection.console.log(`${params.textDocument.uri} closed.`);
 });
-*/
+
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events

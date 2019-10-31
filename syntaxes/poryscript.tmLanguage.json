@@ -16,6 +16,9 @@
 		},
 		{
 			"include": "#keywords"
+		},
+		{
+			"include": "#sections"
 		}
 	],
 	"repository": {
@@ -27,7 +30,7 @@
 				},
 				{
 					"name": "keyword.other.poryscript",
-					"match": "\\b(var|flag|defeated|format)\\b"
+					"match": "\\b(var|flag|defeated|format|raw)\\b"
 				}
 			]
 		},
