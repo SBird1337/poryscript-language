@@ -112,12 +112,16 @@ async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 		for(let include of settings.commandIncludes) {
 			connection.sendRequest("poryscript/readfile", include).then((values) => {
 				let file = <string>(values);
-				let re = /\.macro (\w+)/g;
+				let re = /\.macro (\w+)(?:[ \t])*((?:[ \t,\w:])*)/g;
 				let match = re.exec(file);
 				while(match != null) {
+					let insertText = undefined;
+					if(match[2] != "") {
+						insertText = match[1] + '($0)';
+					}
 					commands.set(match[1], {
 						kind: CompletionItemKind.Function,
-						insertText: match[1] + '($0)'
+						insertText: insertText
 					});
 					match = re.exec(file);
 				}
@@ -283,7 +287,13 @@ connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
 	connection.console.log('We received an file change event');
 	_change.changes.forEach(change => {
-		getOrScanDocumentCommandsSync(change.uri);
+		getDocumentSettings(change.uri).then(settings => {
+			for(let include of settings.commandIncludes){
+				if(change.uri.endsWith(include)) {
+					getOrScanDocumentCommands(change.uri);
+				}
+			}
+		});
 	});
 });
 
