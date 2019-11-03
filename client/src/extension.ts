@@ -4,7 +4,8 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
+import * as fs from 'fs';
+import { workspace, ExtensionContext, Uri } from 'vscode';
 
 import {
 	LanguageClient,
@@ -52,6 +53,16 @@ export function activate(context: ExtensionContext) {
 		serverOptions,
 		clientOptions
 	);
+	client.onReady().then(() => {
+		client.onRequest("poryscript/readfile", file => {
+			let openPath = path.join(workspace.workspaceFolders[0].uri.path, file);
+			if(fs.existsSync(openPath)) {
+				let uri = Uri.file(openPath);
+				return workspace.openTextDocument(uri).then(doc => doc.getText());
+			}
+			return "";
+		});
+	});
 
 	// Start the client. This will also launch the server
 	client.start();

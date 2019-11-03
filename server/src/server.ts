@@ -107,7 +107,24 @@ connection.onDidChangeConfiguration(change => {
 async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 {
 	let commands = new Map<string, Command>();
-
+	let settings = await getDocumentSettings(resource);
+	if(hasWorkspaceFolderCapability) {
+		for(let include of settings.commandIncludes) {
+			connection.sendRequest("poryscript/readfile", include).then((values) => {
+				let file = <string>(values);
+				let re = /\.macro (\w+)/g;
+				let match = re.exec(file);
+				while(match != null) {
+					commands.set(match[1], {
+						kind: CompletionItemKind.Function,
+						insertText: match[1] + '($0)'
+					});
+					match = re.exec(file);
+				}
+			});
+		}
+	}
+	connection.console.log("hello world");
 	commands.set('script', {
 		detail: "Script (Poryscript)",
 		kind: CompletionItemKind.Class,
@@ -265,6 +282,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
 	connection.console.log('We received an file change event');
+	_change.changes.forEach(change => {
+		getOrScanDocumentCommandsSync(change.uri);
+	});
 });
 
 //doc?
