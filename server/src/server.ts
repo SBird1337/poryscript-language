@@ -312,9 +312,21 @@ async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 		insertText: "flag(${0:FLAG_ID})"
 	});
 	commands.set('defeated', {
-		detail: "Get the status of a trainer", kind: CompletionItemKind.Reference,
+		detail: "Get the status of a trainer",
+		kind: CompletionItemKind.Reference,
 		insertText: "defeated(${0:TRAINER_ID})"
 	});
+	commands.set('poryswitch', {
+		detail: "Compile time switch",
+		insertText: "poryswitch(${0:SWITCH_CONDITION}) {\n    _:\n}",
+		parameters: [
+			{
+				name: "SWITCH_CONDITION",
+				kind: CommandParameterKind.Required,
+				default: ""
+			}
+		]
+	})
 	commands.set('if', {});
 	commands.set('elif', {});
 	commands.set('else', {});
