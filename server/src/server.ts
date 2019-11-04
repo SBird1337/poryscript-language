@@ -21,7 +21,6 @@ import {
 	ParameterInformation,
 	MarkupContent,
 } from 'vscode-languageserver';
-import { stringify } from 'querystring';
 import { Stack } from './datastructs';
 
 let sp = require('synchronized-promise');
@@ -167,6 +166,7 @@ function readCommandDocumentation(file: string, position: number) : string {
 		position = readBackToNewLine(file,position);
 		if(position == 0)
 			break;
+		position++;
 		position = skipWhitespace(file,position);
 	}
 	let out: string = "";
@@ -210,7 +210,12 @@ function parseParameters(parameterString: string) : CommandParameter[] {
 			while(position < parameterString.length && parameterString[position] != ' ' && parameterString[position] != '\t') {
 				position++;
 			}
-			let currentDefault = parameterString.substring(defaultBegin, position-1);
+			let currentDefault;
+			if(position == parameterString.length) {
+				currentDefault = parameterString.substring(defaultBegin, position);
+			} else {
+				currentDefault = parameterString.substring(defaultBegin, position-1);
+			}
 			position = skipWhitespaceAndComma(parameterString, position);
 			currentBegin = position;
 			parameters.push({
@@ -294,21 +299,21 @@ async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 	});
 	commands.set('format', {
 		detail: "Format String",
-		kind: CompletionItemKind.Function,
+		kind: CompletionItemKind.Text,
 		insertText: "format(\"$0\")"
 	});
 	commands.set('var', {
 		detail: "Get the value of a variable",
-		kind: CompletionItemKind.Function,
+		kind: CompletionItemKind.Reference,
 		insertText: "var(${0:VAR_ID})"
 	});
 	commands.set('flag', {
 		detail: "Get the value of a flag",
-		kind: CompletionItemKind.Function,
+		kind: CompletionItemKind.Reference,
 		insertText: "flag(${0:FLAG_ID})"
 	});
 	commands.set('defeated', {
-		detail: "Get the status of a trainer", kind: CompletionItemKind.Function,
+		detail: "Get the status of a trainer", kind: CompletionItemKind.Reference,
 		insertText: "defeated(${0:TRAINER_ID})"
 	});
 	commands.set('if', {});
@@ -369,49 +374,51 @@ documents.onDidChangeContent(change => {
 });
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	// In this simple example we get the settings for every validate run.
-	let settings = await getDocumentSettings(textDocument.uri);
-	// The validator creates diagnostics for all uppercase words length 2 and more
-	let text = textDocument.getText();
-	let pattern = /\b[A-Z]{2,}\b/g;
-	let m: RegExpExecArray | null;
+	//TODO: Write our own validation handler
 
-	let problems = 0;
-	let diagnostics: Diagnostic[] = [];
-	while ((m = pattern.exec(text))) {
-		problems++;
-		let diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Warning,
-			range: {
-				start: textDocument.positionAt(m.index),
-				end: textDocument.positionAt(m.index + m[0].length)
-			},
-			message: `${m[0]} is all uppercase.`,
-			source: 'ex'
-		};
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Spelling matters'
-				},
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Particularly for names'
-				}
-			];
-		}
-		diagnostics.push(diagnostic);
-	}
+	// // In this simple example we get the settings for every validate run.
+	// let settings = await getDocumentSettings(textDocument.uri);
+	// // The validator creates diagnostics for all uppercase words length 2 and more
+	// let text = textDocument.getText();
+	// let pattern = /\b[A-Z]{2,}\b/g;
+	// let m: RegExpExecArray | null;
 
-	// Send the computed diagnostics to VSCode.
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	// let problems = 0;
+	// let diagnostics: Diagnostic[] = [];
+	// while ((m = pattern.exec(text))) {
+	// 	problems++;
+	// 	let diagnostic: Diagnostic = {
+	// 		severity: DiagnosticSeverity.Warning,
+	// 		range: {
+	// 			start: textDocument.positionAt(m.index),
+	// 			end: textDocument.positionAt(m.index + m[0].length)
+	// 		},
+	// 		message: `${m[0]} is all uppercase.`,
+	// 		source: 'ex'
+	// 	};
+	// 	if (hasDiagnosticRelatedInformationCapability) {
+	// 		diagnostic.relatedInformation = [
+	// 			{
+	// 				location: {
+	// 					uri: textDocument.uri,
+	// 					range: Object.assign({}, diagnostic.range)
+	// 				},
+	// 				message: 'Spelling matters'
+	// 			},
+	// 			{
+	// 				location: {
+	// 					uri: textDocument.uri,
+	// 					range: Object.assign({}, diagnostic.range)
+	// 				},
+	// 				message: 'Particularly for names'
+	// 			}
+	// 		];
+	// 	}
+	// 	diagnostics.push(diagnostic);
+	// }
+
+	// // Send the computed diagnostics to VSCode.
+	// connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
 connection.onDidChangeWatchedFiles(_change => {
@@ -428,7 +435,6 @@ connection.onDidChangeWatchedFiles(_change => {
 	});
 });
 
-//doc?
 function commandToCompletionItem(id: string, command: Command) : CompletionItem {
 	let item : CompletionItem = {
 		label: id,
@@ -467,38 +473,41 @@ connection.onCompletionResolve(
 function gatherCallInformation(document: TextDocument, position: Position) : {command: string, openParen: Position, closingParen: Position, commas: Position[]} | undefined {
 	let char = document.offsetAt(position);
 	let text = document.getText();
-	let openParen : Position;
-	let closingParen : Position;
+	let openParen: Position | undefined;
+	let closingParen: Position | undefined;
 	let commas : Position[] = [];
-	let command : string = "";
-	while(text[char] != '(' && char != 0 && text[char] != '\r' && text[char] != '\n'){
+	while(char > 0 && text[char] != '\n' && text[char] != '\r') {
+		if(text[char] == '(') {
+			openParen = document.positionAt(char);
+		}
 		char--;
 	}
-	if(text[char] == '(') {
-		openParen = document.positionAt(char);
-		let cmdEnd = char-1;
-		while(text[char] != '\r' && text[char] != '\n' && text[char] != ' ' && text[char] != '\t'){
-			char--;
-		}
-		char++;
-		command = text.substr(char, cmdEnd-char+1);
-		char = cmdEnd;
-		while(text[char] != ')' && char < text.length && text[char] != '\r' && text[char] != '\n'){
+	if(!openParen)
+		return undefined;
+	let openPos = document.offsetAt(openParen);
+	char = openPos;
+	while(text[char] != ' ' && text[char] != '\t' && text[char] != '\r' && text[char] != '\n' && char > 0) {
+		char--;
+	}
+	char++;
+	let command = text.substring(char, openPos);
+	while(char < text.length && text[char] != '\n' && text[char] != '\r') {
+		if(document.offsetAt(openParen) < char) {
+			if(text[char] == ')')
+				closingParen = document.positionAt(char);
 			if(text[char] == ',')
 				commas.push(document.positionAt(char));
-			char++;
 		}
-		if(text[char] == ')') {
-			closingParen = document.positionAt(char);
-			return {
-				openParen: openParen,
-				closingParen: closingParen,
-				commas: commas,
-				command: command
-			};
-		}
+		char++;
 	}
-	return undefined;
+	if(!closingParen)
+		return undefined;
+	return {
+		command: command,
+		openParen: openParen,
+		closingParen: closingParen,
+		commas: commas
+	};
 }
 
 function buildParameterKindString(parameter: CommandParameter) : MarkupContent {
@@ -510,13 +519,13 @@ function buildParameterKindString(parameter: CommandParameter) : MarkupContent {
 	}
 	if(parameter.kind == CommandParameterKind.Optional) {
 		return {
-			value: parameter.name + " (**Optional**)",
+			value: parameter.name + " *Optional*",
 			kind: "markdown"
 		};
 	}
 	if(parameter.kind == CommandParameterKind.Required) {
 		return {
-			value: parameter.name + " (**Required**)",
+			value: parameter.name + " *Required*",
 			kind: "markdown"
 		};
 	}
@@ -539,11 +548,11 @@ function buildParameterInformation(parameters: CommandParameter[]) : ParameterIn
 
 function buildParameterLabelName(parameter: CommandParameter) : string {
 	if(parameter.kind == CommandParameterKind.Default)
-		return parameter.name + "=" + parameter.default;
+		return '[' + parameter.name + "=" + parameter.default + ']';
 	if(parameter.kind == CommandParameterKind.Optional)
-		return parameter.name + " (Optional)";
+		return '[' + parameter.name + ']';
 	if(parameter.kind == CommandParameterKind.Required)
-		return parameter.name + " (Required)";
+		return parameter.name;
 	return "";
 }
 
@@ -552,6 +561,7 @@ function buildParameterLabel(name: string, parameters: CommandParameter[]) : str
 	let names: string[] = [];
 	parameters.forEach(p => names.push(buildParameterLabelName(p)));
 	out += names.join(', ');
+	out += ')';
 	return out;
 }
 
@@ -594,25 +604,6 @@ connection.onSignatureHelp((params: TextDocumentPositionParams) : SignatureHelp 
 		]
 	};
 });
-
-connection.onDidOpenTextDocument((params) => {
-	// A text document got opened in VSCode.
-	// params.textDocument.uri uniquely identifies the document. For documents store on disk this is a file URI.
-	// params.textDocument.text the initial full content of the document.
-	connection.console.log(`${params.textDocument.uri} opened.`);
-});
-connection.onDidChangeTextDocument((params) => {
-	// The content of a text document did change in VSCode.
-	// params.textDocument.uri uniquely identifies the document.
-	// params.contentChanges describe the content changes to the document.
-	connection.console.log(`${params.textDocument.uri} changed: ${JSON.stringify(params.contentChanges)}`);
-});
-connection.onDidCloseTextDocument((params) => {
-	// A text document got closed in VSCode.
-	// params.textDocument.uri uniquely identifies the document.
-	connection.console.log(`${params.textDocument.uri} closed.`);
-});
-
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events
