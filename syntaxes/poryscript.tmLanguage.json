@@ -30,7 +30,7 @@
 				},
 				{
 					"name": "keyword.other.poryscript",
-					"match": "\\b(var|flag|defeated|format|raw)\\b"
+					"match": "\\b(var|flag|defeated|format|raw|poryswitch)\\b"
 				}
 			]
 		},
