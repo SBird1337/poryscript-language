@@ -16,13 +16,23 @@ import {
 	CompletionItemKind,
 	TextDocumentPositionParams,
 	InsertTextFormat,
+	SignatureHelp,
+	Position,
+	ParameterInformation,
+	MarkupContent,
 } from 'vscode-languageserver';
 import { stringify } from 'querystring';
+import { Stack } from './datastructs';
 
 let sp = require('synchronized-promise');
 
+enum CommandParameterKind {
+	Required, Default, Optional
+}
+
+type CommandParameter = { name: string, kind: CommandParameterKind, default: string};
 // TypeScript type for caching the script command intelliSense
-type Command = { documentation?: string, detail?: string, kind?: CompletionItemKind, insertText?: string};
+type Command = { documentation?: string, detail?: string, kind?: CompletionItemKind, insertText?: string, parameters?: CommandParameter[]};
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -57,6 +67,9 @@ connection.onInitialize((params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: true
+			},
+			signatureHelpProvider: {
+				triggerCharacters: ['(', ',']
 			}
 		}
 	};
@@ -104,6 +117,122 @@ connection.onDidChangeConfiguration(change => {
 	documents.all().forEach(validateTextDocument);
 });
 
+function readBackToNewLine(file: string, position: number) : number {
+	while(position != 0 && file[position] != '\n'){position--;}
+	if(file[position] == '\n')
+		position--;
+	if(file[position] == '\r')
+		position--;
+	let pos = file[position];
+	return position;
+}
+
+function skipWhitespace(file: string, position: number) : number {
+	while(position < file.length) {
+		if(file[position] == ' ' || file[position] == '\t' || file[position] == '\n' || file[position] == '\r')
+			position++;
+		else
+			return position;
+	}
+	return position;
+}
+
+function readLine(file: string, position: number) : {line: string, position: number} {
+	let startPos: number = position;
+	while(file[position] != '\r' && file[position] != '\n' && position < file.length) {
+		position++;
+	}
+	return {
+		line: file.substr(startPos, position-startPos),
+		position: position
+	};
+}
+
+function readCommandDocumentation(file: string, position: number) : string {
+	position = readBackToNewLine(file, position);
+	position = readBackToNewLine(file, position);
+	if(position != 0)
+		position++;
+	position = skipWhitespace(file, position);
+	let doc : Stack<string> = new Stack<string>();
+	let lastPosition: number = -1;
+	let x = file[position];
+	while(file[position] == '@') {
+		if(position == lastPosition)
+			break;
+		lastPosition = position;
+		position = skipWhitespace(file,position+1);
+		doc.push(readLine(file, position).line);
+		position = readBackToNewLine(file,position);
+		position = readBackToNewLine(file,position);
+		if(position == 0)
+			break;
+		position = skipWhitespace(file,position);
+	}
+	let out: string = "";
+	while(!doc.isEmpty()) {
+		if(out != "")
+			out += ' ';
+		out += doc.pop();
+	}
+	return out;
+}
+
+function skipWhitespaceAndComma(s: string, position: number) : number {
+	while(position < s.length) {
+		if(s[position] == ' ' || s[position] == '\t' || s[position] == ',')
+			position++;
+		else
+			return position;
+	}
+	return position;
+}
+
+function parseParameters(parameterString: string) : CommandParameter[] {
+	let parameters : CommandParameter[] = [];
+	let position : number = 0;
+	let currentBegin : number = 0;
+	while(position < parameterString.length) {
+		if(parameterString[position] == ':') {
+			let currentParam = parameterString.substring(currentBegin, position);
+			position+=4;
+			position = skipWhitespaceAndComma(parameterString, position);
+			currentBegin = position;
+			parameters.push({
+				name: currentParam,
+				kind: CommandParameterKind.Required,
+				default: ""
+			});
+		} else if(parameterString[position] == '=') {
+			let currentParam = parameterString.substring(currentBegin, position);
+			position++;
+			let defaultBegin = position;
+			while(position < parameterString.length && parameterString[position] != ' ' && parameterString[position] != '\t') {
+				position++;
+			}
+			let currentDefault = parameterString.substring(defaultBegin, position-1);
+			position = skipWhitespaceAndComma(parameterString, position);
+			currentBegin = position;
+			parameters.push({
+				name: currentParam,
+				kind: CommandParameterKind.Default,
+				default: currentDefault
+			});
+		} else if(parameterString[position] == ' ' || parameterString[position] == '\t' || parameterString[position] == ','){
+			let currentParam = parameterString.substring(currentBegin, position);
+			position = skipWhitespaceAndComma(parameterString, position);
+			currentBegin = position;
+			parameters.push({
+				name: currentParam,
+				kind: CommandParameterKind.Optional,
+				default: ""
+			});
+		}
+		position++;
+	}
+	return parameters;
+}
+
 async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 {
 	let commands = new Map<string, Command>();
@@ -112,16 +241,17 @@ async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 		for(let include of settings.commandIncludes) {
 			connection.sendRequest("poryscript/readfile", include).then((values) => {
 				let file = <string>(values);
-				let re = /\.macro (\w+)(?:[ \t])*((?:[ \t,\w:])*)/g;
+				let re = /\.macro (\w+)(?:[ \t])*((?:[ \t,\w:=])*)/g;
 				let match = re.exec(file);
 				while(match != null) {
-					let insertText = undefined;
+					let commandParameters = undefined;
 					if(match[2] != "") {
-						insertText = match[1] + '($0)';
+						commandParameters = parseParameters(match[2]);
 					}
 					commands.set(match[1], {
 						kind: CompletionItemKind.Function,
-						insertText: insertText
+						documentation: readCommandDocumentation(file, match.index),
+						parameters: commandParameters
 					});
 					match = re.exec(file);
 				}
@@ -196,6 +326,7 @@ function getOrScanDocumentCommands(resource: string): Thenable<Map<string, Comma
 	let result = documentCommands.get(resource);
 	if(!result) {
 		result = scanForCommands(resource);
+		documentCommands.set(resource, result);
 	}
 	return result;
 }
@@ -285,12 +416,12 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
-	connection.console.log('We received an file change event');
+	// If one of the include files changed, we need to reset our current command cache
 	_change.changes.forEach(change => {
 		getDocumentSettings(change.uri).then(settings => {
 			for(let include of settings.commandIncludes){
 				if(change.uri.endsWith(include)) {
-					getOrScanDocumentCommands(change.uri);
+					documentCommands.clear();
 				}
 			}
 		});
@@ -333,6 +464,136 @@ connection.onCompletionResolve(
 	}
 );
 
+function gatherCallInformation(document: TextDocument, position: Position) : {command: string, openParen: Position, closingParen: Position, commas: Position[]} | undefined {
+	let char = document.offsetAt(position);
+	let text = document.getText();
+	let openParen : Position;
+	let closingParen : Position;
+	let commas : Position[] = [];
+	let command : string = "";
+	while(text[char] != '(' && char != 0 && text[char] != '\r' && text[char] != '\n'){
+		char--;
+	}
+	if(text[char] == '(') {
+		openParen = document.positionAt(char);
+		let cmdEnd = char-1;
+		while(text[char] != '\r' && text[char] != '\n' && text[char] != ' ' && text[char] != '\t'){
+			char--;
+		}
+		char++;
+		command = text.substr(char, cmdEnd-char+1);
+		char = cmdEnd;
+		while(text[char] != ')' && char < text.length && text[char] != '\r' && text[char] != '\n'){
+			if(text[char] == ',')
+				commas.push(document.positionAt(char));
+			char++;
+		}
+		if(text[char] == ')') {
+			closingParen = document.positionAt(char);
+			return {
+				openParen: openParen,
+				closingParen: closingParen,
+				commas: commas,
+				command: command
+			};
+		}
+	}
+	return undefined;
+}
+
+function buildParameterKindString(parameter: CommandParameter) : MarkupContent {
+	if(parameter.kind == CommandParameterKind.Default) {
+		return {
+			value: parameter.name + "=" + parameter.default,
+			kind: "markdown"
+		};
+	}
+	if(parameter.kind == CommandParameterKind.Optional) {
+		return {
+			value: parameter.name + " (**Optional**)",
+			kind: "markdown"
+		};
+	}
+	if(parameter.kind == CommandParameterKind.Required) {
+		return {
+			value: parameter.name + " (**Required**)",
+			kind: "markdown"
+		};
+	}
+	return {
+		value: "",
+		kind: "plaintext"
+	};
+}
+
+function buildParameterInformation(parameters: CommandParameter[]) : ParameterInformation[] {
+	let out : ParameterInformation[] = [];
+	for(let parameter of parameters) {
+		out.push({
+			label: parameter.name,
+			documentation: buildParameterKindString(parameter)
+		})
+	}
+	return out;
+}
+
+function buildParameterLabelName(parameter: CommandParameter) : string {
+	if(parameter.kind == CommandParameterKind.Default)
+		return parameter.name + "=" + parameter.default;
+	if(parameter.kind == CommandParameterKind.Optional)
+		return parameter.name + " (Optional)";
+	if(parameter.kind == CommandParameterKind.Required)
+		return parameter.name + " (Required)";
+	return "";
+}
+
+function buildParameterLabel(name: string, parameters: CommandParameter[]) : string {
+	let out: string = name + "(";
+	let names: string[] = [];
+	parameters.forEach(p => names.push(buildParameterLabelName(p)));
+	out += names.join(', ');
+	return out;
+}
+
+connection.onSignatureHelp((params: TextDocumentPositionParams) : SignatureHelp | undefined => {
+	let document = documents.get(params.textDocument.uri);
+	let commands = getOrScanDocumentCommandsSync(params.textDocument.uri);
+
+	if(!document)
+		return undefined;
+	let info = gatherCallInformation(document, params.position);
+	if(!info)
+		return undefined;
+	
+	let command = commands.get(info.command);
+	if(!command)
+		return undefined;
+
+	if(!command.parameters)
+		return undefined;
+
+	if(command.parameters.length == 0)
+		return undefined;
+
+	if(params.position.character < info.openParen.character+1 || params.position > info.closingParen)
+		return undefined;
+	
+	let parameterId = 0;
+	while(info.commas.length > parameterId && params.position.character > info.commas[parameterId].character) {
+		parameterId++
+	}
+	return {
+		activeParameter: parameterId,
+		activeSignature: 0,
+		signatures: [
+			{
+				label: buildParameterLabel(info.command, command.parameters),
+				documentation: command.documentation,
+				parameters: buildParameterInformation(command.parameters)
+			}
+		]
+	};
+});
 
 connection.onDidOpenTextDocument((params) => {
 	// A text document got opened in VSCode.
