@@ -16,6 +16,9 @@ At this basic stage it supports basic Syntax Highlighting
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 1.3.0
+ * Added language server capabilities
+
 ### 1.2.0
  * Added Symbol name declarations to entity.name.function.pory
 
