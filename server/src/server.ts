@@ -122,7 +122,6 @@ function readBackToNewLine(file: string, position: number) : number {
 		position--;
 	if(file[position] == '\r')
 		position--;
-	let pos = file[position];
 	return position;
 }
 
