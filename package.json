@@ -74,8 +74,5 @@
     "tslint": "^5.16.0",
     "typescript": "^3.5.1"
   },
-  "dependencies": {
-    "supports-color": "^7.1.0",
-    "synchronized-promise": "^0.2.0"
-  }
+  "dependencies": {}
 }

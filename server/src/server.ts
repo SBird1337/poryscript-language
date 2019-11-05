@@ -23,8 +23,6 @@ import {
 } from 'vscode-languageserver';
 import { Stack } from './datastructs';
 
-let sp = require('synchronized-promise');
-
 enum CommandParameterKind {
 	Required, Default, Optional
 }
@@ -81,7 +79,7 @@ connection.onInitialized(() => {
 	}
 	if (hasWorkspaceFolderCapability) {
 		connection.workspace.onDidChangeWorkspaceFolders(_event => {
-			connection.console.log('Workspace folder change event received.');
+			documentCommands.clear();
 		});
 	}
 });
@@ -262,7 +260,6 @@ async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 			});
 		}
 	}
-	connection.console.log("hello world");
 	commands.set('script', {
 		detail: "Script (Poryscript)",
 		kind: CompletionItemKind.Class,
@@ -349,11 +346,6 @@ function getOrScanDocumentCommands(resource: string): Thenable<Map<string, Comma
 
 async function updateCommandsForDocument(textDocument: TextDocument) : Promise<void> {
 	await getOrScanDocumentCommands(textDocument.uri);
-}
-
-function getOrScanDocumentCommandsSync(resource: string): Map<string, Command> {
-	let syncFunc = sp(getOrScanDocumentCommands);
-	return syncFunc(resource);
 }
 
 
@@ -460,17 +452,15 @@ function commandToCompletionItem(id: string, command: Command) : CompletionItem 
 	
 	return item;
 }
-
-// This handler provides the initial list of the completion items.
 connection.onCompletion(
-	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+	(async (_textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
 		// The pass parameter contains the position of the text document in
 		// which code complete got requested. For the example we ignore this
 		// info and always provide the same completion items.
-		let commands = getOrScanDocumentCommandsSync(_textDocumentPosition.textDocument.uri);
+		let commands = await getOrScanDocumentCommands(_textDocumentPosition.textDocument.uri);
 		return Array.from(commands).map(([key,value]) => commandToCompletionItem(key,value));
 	}
-);
+));
 
 // This handler resolves additional information for the item selected in
 // the completion list.
@@ -575,10 +565,9 @@ function buildParameterLabel(name: string, parameters: CommandParameter[]) : str
 	out += ')';
 	return out;
 }
-
-connection.onSignatureHelp((params: TextDocumentPositionParams) : SignatureHelp | undefined => {
+connection.onSignatureHelp(async (params: TextDocumentPositionParams) : Promise<SignatureHelp | undefined> => {
 	let document = documents.get(params.textDocument.uri);
-	let commands = getOrScanDocumentCommandsSync(params.textDocument.uri);
+	let commands = await getOrScanDocumentCommands(params.textDocument.uri);
 
 	if(!document)
 		return undefined;
