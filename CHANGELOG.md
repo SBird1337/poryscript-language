@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2019-11-05
+
+### Fixed
+ - Fixed a bug that caused completion hint cache not to clear when changing the settings
+ - Fixed a bug that caused completion hint cache not to immediately update when changing watched files
+
+## [1.4.0] - 2019-11-05
+
 ### Added
  - Add support for `poryswitch` compile time switch statement
 

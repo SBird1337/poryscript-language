@@ -103,6 +103,7 @@ connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
 		// Reset all cached document settings
 		documentSettings.clear();
+		documentCommands.clear();
 	} else {
 		globalSettings = <PoryScriptSettings>(
 			(change.settings.languageServerPoryscript || defaultSettings)
@@ -429,10 +430,15 @@ connection.onDidChangeWatchedFiles(_change => {
 	// If one of the include files changed, we need to reset our current command cache
 	_change.changes.forEach(change => {
 		getDocumentSettings(change.uri).then(settings => {
+			let dirty : boolean = false;
 			for(let include of settings.commandIncludes){
 				if(change.uri.endsWith(include)) {
 					documentCommands.clear();
+					dirty = true;
 				}
+			}
+			if(dirty) {
+				documents.all().forEach(updateCommandsForDocument);
 			}
 		});
 	});
