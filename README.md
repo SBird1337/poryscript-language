@@ -16,6 +16,10 @@ At this basic stage it supports basic Syntax Highlighting
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 1.4.0
+ * Added `poryswitch` as a completion hint
+ * Major bug fixes for most non-unix platforms
+
 ### 1.3.0
  * Added language server capabilities
 

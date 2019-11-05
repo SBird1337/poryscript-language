@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - Add support for `poryswitch` compile time switch statement
 
+### Fixed
+ - Removed the `deasync` dependency which caused the extension not to run on most platforms
+ - Fixed a bug that caused reading documents to fail on non-unix like platforms
+ 
+### Changed
+ - Language server features that call async functions are now itself async
+
 ## [1.3.0] - 2019-11-04
 
 ### Added
