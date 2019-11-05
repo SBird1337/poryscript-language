@@ -55,7 +55,7 @@ export function activate(context: ExtensionContext) {
 	);
 	client.onReady().then(() => {
 		client.onRequest("poryscript/readfile", file => {
-			let openPath = path.join(workspace.workspaceFolders[0].uri.path, file);
+			let openPath = path.join(workspace.workspaceFolders[0].uri.fsPath, file);
 			if(fs.existsSync(openPath)) {
 				let uri = Uri.file(openPath);
 				return workspace.openTextDocument(uri).then(doc => doc.getText());
