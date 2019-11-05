@@ -31,6 +31,9 @@ If the field is not set it defaults to the following setting:
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 1.5.0
+ * Add constant parsing
+
 ### 1.4.1
  * Minor bugfixes
 
