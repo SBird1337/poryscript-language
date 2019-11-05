@@ -4,13 +4,28 @@ This is a basic language extension for Poryscript. (https://github.com/huderlem/
 
 At this basic stage it supports basic Syntax Highlighting
 
+## Configuration
+
+The extension parses files like `event.inc` and `movement.inc` to provide completion hints on your LSP client. (Visual Studio Code)
+It needs to know where those files are with respect to your root workspace. To do so, it reads the property `languageServerPoryscript.commandIncludes` of your `settings.json`.
+If the field is not set it defaults to the following setting:
+
+```json
+{
+    "languageServerPoryscript.commandIncludes": [
+        "asm/macros/event.inc",
+        "asm/macros/movement.inc"
+    ]
+}
+```
+
 ## Requirements
 
  * Visual Studio Code 1.31.1 (January 2019)
 
 ## Known Issues
 
- * /
+ * Extension settings are read relatively to your root workpace, therefore this does not work in a multi-workspace environment.
 
 ## Release Notes
 

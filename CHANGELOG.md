@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2019-11-05
+
+### Added
+ - Added parsing for constants and movement constants
+
+### Fixed
+ - Fixed a bug that caused completion hint cache not to immediately update when a poryscript document is opened
+
+### Changed
+ - Changed default value for `languageServerPoryscript.commandIncludes` to `["asm/macros/event.inc", "asm/macros/movement.inc"]`
+
 ## [1.4.1] - 2019-11-05
 
 ### Fixed

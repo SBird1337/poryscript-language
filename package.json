@@ -44,7 +44,8 @@
           "scope": "resource",
           "type": "array",
           "default": [
-            "asm/macros/event.inc"
+            "asm/macros/event.inc",
+            "asm/macros/movement.inc"
           ],
           "description": "Macro Files that should be read and handled by the IntelliSense of the langauge server."
         },

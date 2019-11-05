@@ -20,6 +20,9 @@ import {
 	Position,
 	ParameterInformation,
 	MarkupContent,
+	FormattingOptions,
+	DidOpenTextDocumentParams,
+	TextDocumentChangeEvent,
 } from 'vscode-languageserver';
 import { Stack } from './datastructs';
 
@@ -92,7 +95,7 @@ interface PoryScriptSettings {
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: PoryScriptSettings = { commandIncludes: ["asm/macros/event.inc"] };
+const defaultSettings: PoryScriptSettings = { commandIncludes: ["asm/macros/event.inc", "asm/macros/movement.inc"] };
 let globalSettings: PoryScriptSettings = defaultSettings;
 
 // Cache the settings of all open documents
@@ -236,6 +239,64 @@ function parseParameters(parameterString: string) : CommandParameter[] {
 	return parameters;
 }
 
+function parseScriptCommands(file: string) : Map<string, Command> {
+	let commands : Map<string,Command> = new Map();
+	let re = /\.macro (\w+)(?:[ \t])*((?:[ \t,\w:=])*)/g;
+	let match = re.exec(file);
+	while(match != null) {
+		let commandParameters = undefined;
+		if(match[2] != "") {
+			commandParameters = parseParameters(match[2]);
+		}
+		commands.set(match[1], {
+			kind: CompletionItemKind.Function,
+			documentation: readCommandDocumentation(file, match.index),
+			parameters: commandParameters
+		});
+		match = re.exec(file);
+	}
+	return commands;
+}
+
+function parseAssemblyConstants(file: string) : Map<string, Command> {
+	let commands : Map<string, Command> = new Map();
+	let re = /^[\t ]*(\w+)[\t ]*=[\t ]*([\w\d]+)[\w\t]*$/gm;
+	let match = re.exec(file);
+	while(match != null) {
+		let key = match[1];
+		let value = match[2];
+		commands.set(key, {
+			kind: CompletionItemKind.Constant,
+			detail: value
+		});
+		match = re.exec(file);
+	}
+	return commands;
+}
+
+function parseMovementConstants(file: string) : Map<string, Command> {
+	let commands : Map<string, Command> = new Map();
+	let re = /^[\t ]*(?:create_movement_action)[\t ]* ([\w\d]+)[\t ]*$/gm;
+	let match = re.exec(file);
+	while(match != null) {
+		let key = match[1];
+		commands.set(key, {
+			kind: CompletionItemKind.Constant,
+			detail: "movement"
+		});
+		match = re.exec(file);
+	}
+	return commands;
+}
+
+function mergeCommands(to: Map<string,Command>, from: Map<string,Command>) {
+	for(let key of from.keys()){
+		let val = from.get(key);
+		if(val)
+			to.set(key, val);
+	}
+}
+
 async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 {
 	let commands = new Map<string, Command>();
@@ -244,20 +305,12 @@ async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 		for(let include of settings.commandIncludes) {
 			connection.sendRequest("poryscript/readfile", include).then((values) => {
 				let file = <string>(values);
-				let re = /\.macro (\w+)(?:[ \t])*((?:[ \t,\w:=])*)/g;
-				let match = re.exec(file);
-				while(match != null) {
-					let commandParameters = undefined;
-					if(match[2] != "") {
-						commandParameters = parseParameters(match[2]);
-					}
-					commands.set(match[1], {
-						kind: CompletionItemKind.Function,
-						documentation: readCommandDocumentation(file, match.index),
-						parameters: commandParameters
-					});
-					match = re.exec(file);
-				}
+				let scriptCommands : Map<string,Command> = parseScriptCommands(file);
+				let constantCommands : Map<string, Command> = parseAssemblyConstants(file);
+				let movementCommands : Map<string, Command> = parseMovementConstants(file);
+				mergeCommands(commands, scriptCommands);
+				mergeCommands(commands, constantCommands);
+				mergeCommands(commands, movementCommands);
 			});
 		}
 	}
@@ -609,6 +662,10 @@ connection.onSignatureHelp(async (params: TextDocumentPositionParams) : Promise<
 			}
 		]
 	};
+});
+
+documents.onDidOpen((e : TextDocumentChangeEvent) => {
+	updateCommandsForDocument(e.document);
 });
 
 // Make the text document manager listen on the connection
