@@ -76,9 +76,14 @@
 		"sections": {
 			"patterns": [
 				{
-					"name": "string.other.pory",
+					"name": "source.arm.embedded.pory",
 					"begin": "`",
-					"end": "`"
+					"end": "`",
+					"patterns": [
+						{
+							"include": "source.arm"
+						}
+					]
 				}
 			]
 		},
