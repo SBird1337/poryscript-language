@@ -29,8 +29,8 @@
 					"match": "\\b(if|while|return|else|elif|end|break|continue|switch|case)\\b"
 				},
 				{
-					"name": "keyword.other.poryscript",
-					"match": "\\b(var|flag|defeated|format|raw|poryswitch)\\b"
+					"name": "keyword.other.pory",
+					"match": "\\b(var|flag|defeated|format|raw|poryswitch|const)\\b"
 				}
 			]
 		},
@@ -58,6 +58,10 @@
 				{
 					"name": "constant.character.escape.pory",
 					"match": "\\\\."
+				},
+				{
+					"name": "constant.character.escape.pory",
+					"match": "{[\\w ]+}"
 				}
 			]
 		},
