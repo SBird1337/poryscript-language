@@ -33,7 +33,10 @@
       {
         "language": "poryscript",
         "scopeName": "source.pory",
-        "path": "./syntaxes/poryscript.tmLanguage.json"
+        "path": "./syntaxes/poryscript.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.arm": "arm"
+        }
       }
     ],
     "configuration": {
