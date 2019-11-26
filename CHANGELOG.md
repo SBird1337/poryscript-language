@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2019-11-26
+
 ### Changed
  - Content of the `raw` directive is now rendered as `source.arm.embedded`.
  - Constants are correctly highlighted
  - String escapes wrapped in `{}` are correctly marked as escape characters.
 
+### Fixed
+ - Refractored the syntax highlighting s.t. highlighting is more aware of its context
+ 
 ## [1.5.0] - 2019-11-05
 
 ### Added
