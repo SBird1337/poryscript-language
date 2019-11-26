@@ -221,6 +221,9 @@
 				},
 				{
 					"include": "#string"
+				},
+				{
+					"include": "#comments"
 				}
 			]
 		},
@@ -228,6 +231,9 @@
 			"patterns": [
 				{
 					"include": "#string"
+				},
+				{
+					"include": "#comments"
 				}
 			]
 		},
@@ -238,6 +244,9 @@
 				},
 				{
 					"include": "#numeric"
+				},
+				{
+					"include": "#comments"
 				}
 			]
 		},
@@ -281,7 +290,8 @@
 						}
 					}
 				}
-			]
+			],
+			"include": "#comments"
 		},
 		"inside_mapscript_table": {
 			"patterns": [
@@ -304,7 +314,8 @@
 						}
 					}
 				}
-			]
+			],
+			"include": "#comments"
 		},
 		"numeric": {
 			"patterns": [

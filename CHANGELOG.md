@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2019-11-26
+### Fixed
+ - Fixed a bug that caused comments not to render inside of sections.
+
 ## [1.5.1] - 2019-11-26
 
 ### Changed
