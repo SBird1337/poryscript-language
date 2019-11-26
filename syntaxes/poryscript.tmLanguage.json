@@ -160,8 +160,8 @@
 			"patterns": [
 				{
 					"name": "source.arm.embedded.pory",
-					"begin" : "\\b(raw)\\b[ \\t]*(`?)",
-					"beginCaptures":{
+					"begin": "\\b(raw)\\b[ \\t]*(`?)",
+					"beginCaptures": {
 						"1": {
 							"name": "keyword.other.pory"
 						},
@@ -170,7 +170,7 @@
 						}
 					},
 					"end": "(`)",
-					"endCaptures":{
+					"endCaptures": {
 						"1": {
 							"name": "string.quoted.double.pory"
 						}
@@ -181,7 +181,6 @@
 						}
 					]
 				}
-
 			]
 		},
 		"inside_script": {
@@ -370,13 +369,13 @@
 					"match": "\\b(const)\\b[ \\t]*\\b([aA-zZ_0-9]*)\\b[ \\t]*(?:=[ \\t]*([aA-zZ_0-9]*))*",
 					"captures": {
 						"1": {
-							"name":"keyword.control.directive.const.pory"
+							"name": "keyword.control.directive.const.pory"
 						},
 						"2": {
-							"name":"entity.name.function.preprocessor.pory"
+							"name": "entity.name.function.preprocessor.pory"
 						},
 						"3": {
-							"name":"meta.preprocessor.macro.pory"
+							"name": "meta.preprocessor.macro.pory"
 						}
 					}
 				}
