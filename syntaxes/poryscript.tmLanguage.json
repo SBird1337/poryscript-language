@@ -186,7 +186,7 @@
 		"inside_script": {
 			"patterns": [
 				{
-					"match": "\\b(if|while|return|else|elif|end|break|continue|switch|case)\\b",
+					"match": "\\b(if|do|while|return|else|elif|end|break|continue|switch|case|default)\\b",
 					"name": "keyword.control.pory"
 				},
 				{
@@ -288,9 +288,11 @@
 							"name": "punctuation.pory"
 						}
 					}
+				},
+				{
+					"include": "#comments"
 				}
-			],
-			"include": "#comments"
+			]
 		},
 		"inside_mapscript_table": {
 			"patterns": [
@@ -312,9 +314,11 @@
 							"name": "punctuation.pory"
 						}
 					}
+				},
+				{
+					"include": "#comments"
 				}
-			],
-			"include": "#comments"
+			]
 		},
 		"numeric": {
 			"patterns": [
