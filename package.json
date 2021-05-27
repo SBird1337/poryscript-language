@@ -4,9 +4,10 @@
   "description": "Syntax highlighting for Poryscript script language",
   "version": "1.5.2",
   "publisher": "karathan",
+  "license": "MIT",
   "repository": "https://github.com/SBird1337/poryscript-language",
   "engines": {
-    "vscode": "^1.31.1"
+    "vscode": "^1.42.0"
   },
   "categories": [
     "Programming Languages"

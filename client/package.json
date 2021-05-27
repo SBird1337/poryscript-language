@@ -10,16 +10,13 @@
         "url": "https://github.com/SBird1337/poryscript-language"
     },
     "engines": {
-        "vscode": "^1.31.1"
+        "vscode": "^1.42.0"
     },
-    "scripts": {
-        "update-vscode": "vscode-install",
-        "postinstall": "vscode-install"
-    },
+    "scripts": {},
     "dependencies": {
         "vscode-languageclient": "^5.2.1"
     },
     "devDependencies": {
-        "vscode": "^1.1.35"
+        "@types/vscode": "^1.42.0"
     }
 }
