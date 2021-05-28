@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Breaking
- - Visual Studio Code minimum required version was changed to `^1.42.0` due to security audit fixes.
+ - Visual Studio Code minimum required version was changed to `^1.44.0`.
 
 ### Fixed
  - Fixed missing syntax highlighting (#14)

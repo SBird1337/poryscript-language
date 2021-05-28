@@ -6,7 +6,6 @@
 import {
 	createConnection,
 	TextDocuments,
-	TextDocument,
 	Diagnostic,
 	DiagnosticSeverity,
 	ProposedFeatures,
@@ -23,7 +22,23 @@ import {
 	FormattingOptions,
 	DidOpenTextDocumentParams,
 	TextDocumentChangeEvent,
-} from 'vscode-languageserver';
+	TextDocumentSyncKind,
+	DocumentSymbol,
+	SymbolKind,
+	Location,
+	HandlerResult,
+	SemanticTokensParams,
+	SemanticTokens,
+	SemanticTokensBuilder,
+	SemanticTokensLegend,
+	SemanticTokensRangeParams,
+	SemanticTokensDeltaParams
+} from 'vscode-languageserver/node';
+
+import {
+	TextDocument
+} from 'vscode-languageserver-textdocument';
+
 import { Stack } from './datastructs';
 
 enum CommandParameterKind {
@@ -40,7 +55,7 @@ let connection = createConnection(ProposedFeatures.all);
 
 // Create a simple text document manager. The text document manager
 // supports full document sync only
-let documents: TextDocuments = new TextDocuments();
+let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
@@ -63,17 +78,76 @@ connection.onInitialize((params: InitializeParams) => {
 	);
 	return {
 		capabilities: {
-			textDocumentSync: documents.syncKind,
+			textDocumentSync: TextDocumentSyncKind.Incremental,
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: true
 			},
 			signatureHelpProvider: {
 				triggerCharacters: ['(', ',']
+			},
+			semanticTokensProvider: {
+				full: true,
+				range: true,
+				legend: {
+					tokenTypes: ["keyword", "function", "enumMember"],
+					tokenModifiers: []
+				}
 			}
 		}
 	};
 });
+
+connection.languages.semanticTokens.on(async (params : SemanticTokensParams) => {
+	let builder = new SemanticTokensBuilder();
+	let document = documents.get(params.textDocument.uri);
+	if(!document)
+		return builder.build();
+	
+	let lines = document.getText().split(/\r?\n/);
+	return await parseSemanticTokens(lines, builder, document.uri);
+
+});
+
+connection.languages.semanticTokens.onRange(async (params : SemanticTokensRangeParams) => {
+	let builder = new SemanticTokensBuilder();
+	let document = documents.get(params.textDocument.uri);
+	if(!document)
+		return builder.build();
+	let lines = document.getText(params.range).split(/\r?\n/);
+	return await parseSemanticTokens(lines, builder, document.uri);
+});
+
+function isWhitespaceOrParenthesis(char:string)
+{
+	if(char === '(' || char === ')' || char === '\t' || char === ' ' || char === '\r' || char === '\n' || char === undefined)
+		return true;
+	return false;
+}
+
+async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBuilder, resource:string) {
+	let commands = await getOrScanDocumentCommands(resource);
+	for(let i = 0; i < lines.length; ++i) {
+		commands.forEach((value: Command, key: string) => {
+			if(value.kind == CompletionItemKind.Function) {
+				let index = lines[i].indexOf(key);
+				if(index != -1 && isWhitespaceOrParenthesis(lines[i][index + key.length])) {
+					if(value.parameters && value.parameters.length > 0)
+						builder.push(i, index, key.length, 1, 0);
+					else
+						builder.push(i, index, key.length, 0, 0);
+				}
+			}
+			else if(value.kind == CompletionItemKind.Constant) {
+				let index = lines[i].indexOf(key);
+				if(index != -1 && isWhitespaceOrParenthesis(lines[i][index + key.length]))
+					builder.push(i, index, key.length, 2, 0);
+			}
+
+		});
+	}
+	return builder.build();
+}
 
 connection.onInitialized(() => {
 	if (hasConfigurationCapability) {
@@ -478,6 +552,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
+connection
+
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
 	// If one of the include files changed, we need to reset our current command cache
@@ -664,7 +740,7 @@ connection.onSignatureHelp(async (params: TextDocumentPositionParams) : Promise<
 	};
 });
 
-documents.onDidOpen((e : TextDocumentChangeEvent) => {
+documents.onDidOpen((e : TextDocumentChangeEvent<TextDocument>) => {
 	updateCommandsForDocument(e.document);
 });
 
