@@ -31,6 +31,9 @@ If the field is not set it defaults to the following setting:
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 2.0.0
+ * Experimental Semantic Highlighter
+
 ### 1.5.1
  * Minor fixes and improvements
 

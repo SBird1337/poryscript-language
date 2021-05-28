@@ -2,7 +2,7 @@
   "name": "poryscript",
   "displayName": "Poryscript",
   "description": "Syntax highlighting for Poryscript script language",
-  "version": "1.5.2",
+  "version": "2.0.0",
   "publisher": "karathan",
   "license": "MIT",
   "repository": "https://github.com/SBird1337/poryscript-language",
@@ -68,7 +68,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
+    "vscode:prepublish": "cd client && cd .. && npm run compile",
     "compile": "tsc -b",
     "watch": "tsc -b -w",
     "postinstall": "cd client && npm install && cd ../server && npm install && cd .."
