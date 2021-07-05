@@ -31,6 +31,10 @@ If the field is not set it defaults to the following setting:
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 2.1.0
+ * Several fixes in highlighting and semantic highlighting
+ * Semantic highlighting for document local constants
+
 ### 2.0.0
  * Experimental Semantic Highlighter
 

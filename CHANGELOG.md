@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2021-07-05
+
+### Added
+ - Semantic highlighting for document local constants
+
+## Fixed
+ - Semantic Highlighting in other tokens, strings and comments
+ - `poryswitch` keyword in `text` sections
+
 ## [2.0.0] - 2021-05-31
 
 ### Added
