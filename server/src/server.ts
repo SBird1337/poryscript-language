@@ -32,7 +32,13 @@ import {
 	SemanticTokensBuilder,
 	SemanticTokensLegend,
 	SemanticTokensRangeParams,
-	SemanticTokensDeltaParams
+	SemanticTokensDeltaParams,
+	DocumentSymbolParams,
+	integer,
+	DeclarationParams,
+	LocationLink,
+	DeclarationLink,
+	Range
 } from 'vscode-languageserver/node';
 
 import {
@@ -48,6 +54,8 @@ enum CommandParameterKind {
 type CommandParameter = { name: string, kind: CommandParameterKind, default: string};
 // TypeScript type for caching the script command intelliSense
 type Command = { documentation?: string, detail?: string, kind?: CompletionItemKind, insertText?: string, parameters?: CommandParameter[]};
+
+type ConstantSymbol = {position: Position, name: string, resolution: string};
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -127,6 +135,7 @@ function isWhitespaceOrParenthesis(char:string)
 
 async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBuilder, resource:string) {
 	let commands = await getOrScanDocumentCommands(resource);
+	let constants = await documentConstants.get(resource);
 	for(let i = 0; i < lines.length; ++i) {
 		commands.forEach((value: Command, key: string) => {
 			if(value.kind == CompletionItemKind.Function) {
@@ -145,6 +154,16 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 			}
 
 		});
+		if(constants) {
+			constants.forEach((value: ConstantSymbol, key: string) => {
+				if(value.position.line != i) {
+					let index = lines[i].indexOf(value.name);
+					if(index != -1) {
+						builder.push(i, index, value.name.length, 2, 0);
+					}
+				}
+			});
+		}
 	}
 	return builder.build();
 }
@@ -175,6 +194,7 @@ let globalSettings: PoryScriptSettings = defaultSettings;
 // Cache the settings of all open documents
 let documentSettings: Map<string, Thenable<PoryScriptSettings>> = new Map();
 let documentCommands: Map<string, Thenable<Map<string, Command>>> = new Map();
+let documentConstants: Map<string, Thenable<Map<string, ConstantSymbol>>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
@@ -371,6 +391,27 @@ function mergeCommands(to: Map<string,Command>, from: Map<string,Command>) {
 	}
 }
 
+async function parseDocumentConstants(resource : string) : Promise<Map<string, ConstantSymbol>> {
+	let document = documents.get(resource);
+	let constants = new Map<string, ConstantSymbol>();
+	if(!document)
+		return constants;
+	let text = document.getText();
+	let lines = text.split(/\r?\n/);
+	let re = /const\s+(\w+)\s*=\s*(\w+)/
+	for(let i = 0; i < lines.length; ++i) {
+		let match = re.exec(lines[i]);
+		if(match != null) {
+			constants.set(match[1], {
+				name: match[1],
+				position: Position.create(i, match.index),
+				resolution: match[2]
+			});
+		}
+	}
+	return constants;
+}
+
 async function scanForCommands(resource: string) : Promise<Map<string, Command>>
 {
 	let commands = new Map<string, Command>();
@@ -501,6 +542,7 @@ documents.onDidClose(e => {
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
+	documentConstants.set(change.document.uri, parseDocumentConstants(change.document.uri));
 	validateTextDocument(change.document);
 });
 
@@ -573,6 +615,16 @@ connection.onDidChangeWatchedFiles(_change => {
 	});
 });
 
+function constantToCompletionItem(name: string, constant: ConstantSymbol) : CompletionItem {
+	let item : CompletionItem = {
+		label: name,
+		kind: CompletionItemKind.Constant,
+		documentation: "",
+		detail: ""
+	}
+	return item;
+}
+
 function commandToCompletionItem(id: string, command: Command) : CompletionItem {
 	let item : CompletionItem = {
 		label: id,
@@ -593,7 +645,13 @@ connection.onCompletion(
 		// which code complete got requested. For the example we ignore this
 		// info and always provide the same completion items.
 		let commands = await getOrScanDocumentCommands(_textDocumentPosition.textDocument.uri);
-		return Array.from(commands).map(([key,value]) => commandToCompletionItem(key,value));
+		let constants = await documentConstants.get(_textDocumentPosition.textDocument.uri);
+		let commandsArray = Array.from(commands).map(([key,value]) => commandToCompletionItem(key,value));
+		let constantsArray = new Array();
+		if(constants)
+			constantsArray = Array.from(constants).map(([key, value]) => constantToCompletionItem(key, value));
+		
+		return commandsArray.concat(constantsArray);
 	}
 ));
 
