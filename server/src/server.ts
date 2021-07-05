@@ -126,9 +126,36 @@ connection.languages.semanticTokens.onRange(async (params : SemanticTokensRangeP
 	return await parseSemanticTokens(lines, builder, document.uri);
 });
 
-function isWhitespaceOrParenthesis(char:string)
+function isWhitespaceOrParenthesis(char:string) : boolean
 {
-	if(char === '(' || char === ')' || char === '\t' || char === ' ' || char === '\r' || char === '\n' || char === undefined)
+	return (char === '(' || char === ')' || isWhitespace(char));
+}
+
+function isWhitespace(char:string) : boolean
+{
+	return (char === '\t' || char === ' ' || char === '\r' || char === '\n' || char === undefined)
+}
+
+function isSingleSymbol(line:string, index:number, key:string) : boolean
+{
+	if(isWhitespaceOrParenthesis(line[index + key.length]))
+	{
+		return (index == 0 || isWhitespace(line[index-1]));
+	}
+	return false;
+}
+
+function isInCommentOrString(line:string, index:number, key:string) : boolean
+{
+	let slashComment = line.indexOf("//");
+	let hashComment = line.indexOf("#");
+	let preStringQuote = line.indexOf("\"");
+	let postStringQuote = line.indexOf("\"", index + key.length);
+	if(slashComment != -1 && slashComment < index)
+		return true;
+	if(hashComment != -1 && hashComment < index)
+		return true;
+	if(preStringQuote != -1 && preStringQuote < index && postStringQuote != -1 && postStringQuote > (index + key.length))
 		return true;
 	return false;
 }
@@ -140,7 +167,7 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 		commands.forEach((value: Command, key: string) => {
 			if(value.kind == CompletionItemKind.Function) {
 				let index = lines[i].indexOf(key);
-				if(index != -1 && isWhitespaceOrParenthesis(lines[i][index + key.length])) {
+				if(index != -1 && isSingleSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key)) {
 					if(value.parameters && value.parameters.length > 0)
 						builder.push(i, index, key.length, 1, 0);
 					else
@@ -149,7 +176,7 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 			}
 			else if(value.kind == CompletionItemKind.Constant) {
 				let index = lines[i].indexOf(key);
-				if(index != -1 && isWhitespaceOrParenthesis(lines[i][index + key.length]))
+				if(index != -1 && isSingleSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key))
 					builder.push(i, index, key.length, 2, 0);
 			}
 
@@ -158,7 +185,7 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 			constants.forEach((value: ConstantSymbol, key: string) => {
 				if(value.position.line != i) {
 					let index = lines[i].indexOf(value.name);
-					if(index != -1) {
+					if(index != -1 && isSingleSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key)) {
 						builder.push(i, index, value.name.length, 2, 0);
 					}
 				}
