@@ -38,7 +38,8 @@ import {
 	DeclarationParams,
 	LocationLink,
 	DeclarationLink,
-	Range
+	Range,
+	WorkspaceFolder
 } from 'vscode-languageserver/node';
 
 import {
@@ -46,6 +47,7 @@ import {
 } from 'vscode-languageserver-textdocument';
 
 import { Stack } from './datastructs';
+import { time } from 'console';
 
 enum CommandParameterKind {
 	Required, Default, Optional
@@ -57,6 +59,12 @@ type Command = { documentation?: string, detail?: string, kind?: CompletionItemK
 
 type ConstantSymbol = {position: Position, name: string, resolution: string};
 
+type SectionSymbol = {position: Position, name: string};
+
+type PoryscriptSymbolCollection = {scripts: Array<SectionSymbol>, mapScripts: Array<SectionSymbol>, movementScripts: Array<SectionSymbol>, textSections: Array<SectionSymbol>};
+
+type SemanticHighlightedRange = {start: number, len: number, tokenType: number, tokenClass: number};
+
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 let connection = createConnection(ProposedFeatures.all);
@@ -64,6 +72,7 @@ let connection = createConnection(ProposedFeatures.all);
 // Create a simple text document manager. The text document manager
 // supports full document sync only
 let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+let workspaceFolders : Array<WorkspaceFolder>;
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
@@ -84,6 +93,9 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities.textDocument.publishDiagnostics &&
 		capabilities.textDocument.publishDiagnostics.relatedInformation
 	);
+	if(hasWorkspaceFolderCapability && params.workspaceFolders)
+		workspaceFolders = params.workspaceFolders;
+	
 	return {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -98,7 +110,7 @@ connection.onInitialize((params: InitializeParams) => {
 				full: true,
 				range: true,
 				legend: {
-					tokenTypes: ["keyword", "function", "enumMember"],
+					tokenTypes: ["keyword", "function", "enumMember", "variable"],
 					tokenModifiers: []
 				}
 			}
@@ -117,15 +129,6 @@ connection.languages.semanticTokens.on(async (params : SemanticTokensParams) => 
 
 });
 
-connection.languages.semanticTokens.onRange(async (params : SemanticTokensRangeParams) => {
-	let builder = new SemanticTokensBuilder();
-	let document = documents.get(params.textDocument.uri);
-	if(!document)
-		return builder.build();
-	let lines = document.getText(params.range).split(/\r?\n/);
-	return await parseSemanticTokens(lines, builder, document.uri);
-});
-
 function isWhitespaceOrParenthesis(char:string) : boolean
 {
 	return (char === '(' || char === ')' || isWhitespace(char));
@@ -134,6 +137,20 @@ function isWhitespaceOrParenthesis(char:string) : boolean
 function isWhitespace(char:string) : boolean
 {
 	return (char === '\t' || char === ' ' || char === '\r' || char === '\n' || char === undefined)
+}
+
+function isWhitespaceCommaOrParenthesis(char:string) : boolean
+{
+	return isWhitespaceOrParenthesis(char) || char === ',';
+}
+
+function isFullSymbol(line:string, index: number, key:string) : boolean
+{
+	if(isWhitespaceCommaOrParenthesis(line[index + key.length]))
+	{
+		return (index == 0 || isWhitespaceCommaOrParenthesis(line[index-1]))
+	}
+	return false;
 }
 
 function isSingleSymbol(line:string, index:number, key:string) : boolean
@@ -163,39 +180,81 @@ function isInCommentOrString(line:string, index:number, key:string) : boolean
 async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBuilder, resource:string) {
 	let commands = await getOrScanDocumentCommands(resource);
 	let constants = await documentConstants.get(resource);
+	let globalSymbolMap = await generateGlobalSymbolTable();
+	let scriptSymbols = globalSymbolMap.flatMap((sym) => sym.scripts);
+	let movementSymbols = globalSymbolMap.flatMap((sym) => sym.movementScripts);
+	let mapscriptSymbols = globalSymbolMap.flatMap((sym) => sym.mapScripts);
+	let textSymbols = globalSymbolMap.flatMap((sym) => sym.textSections);
+
 	for(let i = 0; i < lines.length; ++i) {
+		let foundTokens: Array<SemanticHighlightedRange> = new Array<SemanticHighlightedRange>();
 		commands.forEach((value: Command, key: string) => {
-			if(value.kind == CompletionItemKind.Function) {
-				let index = lines[i].indexOf(key);
-				if(index != -1 && isSingleSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key)) {
-					if(value.parameters && value.parameters.length > 0)
-						builder.push(i, index, key.length, 1, 0);
-					else
-						builder.push(i, index, key.length, 0, 0);
+			//those are logic keywords in the language but also typically defined script commands, kind of a hacky workaround here
+			//to just ignore them
+			if(key !== "switch" && key !== "case") {
+				if(value.kind == CompletionItemKind.Function) {
+					let index = lines[i].indexOf(key);
+					if(index != -1 && isSingleSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key)) {
+						if(value.parameters && value.parameters.length > 0)
+							builder.push(i, index, key.length, 1, 0);
+						else
+							builder.push(i, index, key.length, 0, 0);
+					}
+				}
+				else if(value.kind == CompletionItemKind.Constant) {
+					let index = lines[i].indexOf(key);
+					if(index != -1 && isFullSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key))
+						builder.push(i, index, key.length, 2, 0);
 				}
 			}
-			else if(value.kind == CompletionItemKind.Constant) {
-				let index = lines[i].indexOf(key);
-				if(index != -1 && isSingleSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key))
-					builder.push(i, index, key.length, 2, 0);
-			}
-
 		});
 		if(constants) {
 			constants.forEach((value: ConstantSymbol, key: string) => {
 				if(value.position.line != i) {
 					let index = lines[i].indexOf(value.name);
-					if(index != -1 && isSingleSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key)) {
+					if(index != -1 && isFullSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key)) {
 						builder.push(i, index, value.name.length, 2, 0);
 					}
 				}
 			});
 		}
+		scriptSymbols.forEach(symbol => {
+			if(symbol.position.line != i) {
+				let index = lines[i].indexOf(symbol.name);
+				if(index != -1 && isFullSymbol(lines[i], index, symbol.name) && !isInCommentOrString(lines[i], index, symbol.name)) {
+					builder.push(i, index, symbol.name.length, 1, 0);
+				}
+			}
+		});
+		mapscriptSymbols.forEach(symbol => {
+			if(symbol.position.line != i) {
+				let index = lines[i].indexOf(symbol.name);
+				if(index != -1 && isFullSymbol(lines[i], index, symbol.name) && !isInCommentOrString(lines[i], index, symbol.name)) {
+					builder.push(i, index, symbol.name.length, 1, 0);
+				}
+			}
+		});
+		movementSymbols.forEach(symbol => {
+			if(symbol.position.line != i) {
+				let index = lines[i].indexOf(symbol.name);
+				if(index != -1 && isFullSymbol(lines[i], index, symbol.name) && !isInCommentOrString(lines[i], index, symbol.name)) {
+					builder.push(i, index, symbol.name.length, 3, 0);
+				}
+			}
+		});
+		textSymbols.forEach(symbol => {
+			if(symbol.position.line != i) {
+				let index = lines[i].indexOf(symbol.name);
+				if(index != -1 && isFullSymbol(lines[i], index, symbol.name) && !isInCommentOrString(lines[i], index, symbol.name)) {
+					builder.push(i, index, symbol.name.length, 3, 0);
+				}
+			}
+		});
 	}
 	return builder.build();
 }
 
-connection.onInitialized(() => {
+connection.onInitialized(async () => {
 	if (hasConfigurationCapability) {
 		// Register for all configuration changes.
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
@@ -204,6 +263,12 @@ connection.onInitialized(() => {
 		connection.workspace.onDidChangeWorkspaceFolders(_event => {
 			documentCommands.clear();
 		});
+	}
+	let poryFiles : Array<string> = await connection.sendRequest("poryscript/getPoryscriptFiles");
+	for(let file of poryFiles)
+	{
+		let uri : string = "file://" + file;
+		globalSymbolMap.set(uri, parseDocumentSymbols(file));
 	}
 });
 
@@ -220,8 +285,10 @@ let globalSettings: PoryScriptSettings = defaultSettings;
 
 // Cache the settings of all open documents
 let documentSettings: Map<string, Thenable<PoryScriptSettings>> = new Map();
+
 let documentCommands: Map<string, Thenable<Map<string, Command>>> = new Map();
 let documentConstants: Map<string, Thenable<Map<string, ConstantSymbol>>> = new Map();
+let globalSymbolMap: Map<string, Thenable<PoryscriptSymbolCollection>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
@@ -238,6 +305,33 @@ connection.onDidChangeConfiguration(change => {
 	// Revalidate all open text documents
 	documents.all().forEach(validateTextDocument);
 });
+
+function addPoryscriptSectionSymbol(re: RegExp, line: string, lineIndex: number, container: Array<SectionSymbol>) : void {
+	let match = re.exec(line);
+	if(match != null)
+		container.push({position: Position.create(lineIndex, match.index), name: match[1]});
+}
+
+async function parseDocumentSymbols(file: string) : Promise<PoryscriptSymbolCollection> {
+	//NOTE: this will not work with multi line declared sections
+	let text = await connection.sendRequest("poryscript/readfs", file) as string;
+	let lines = text.split(/\r?\n/);
+	let scriptRegex = /script\s+(\w+)\s*\{/;
+	let movementRegex = /movement\s+(\w+)\s*\{/;
+	let mapscriptRegex = /mapscript\s+(\w+)\s*\{/;
+	let textRegex = /text\s+(\w+)\s*\{/;
+	let scriptSymbols = new Array<SectionSymbol>();
+	let movementSymbols = new Array<SectionSymbol>();
+	let mapscriptSymbols = new Array<SectionSymbol>();
+	let textSymbols = new Array<SectionSymbol>();
+	for(let i = 0; i < lines.length; ++i) {
+		addPoryscriptSectionSymbol(scriptRegex, lines[i], i, scriptSymbols);
+		addPoryscriptSectionSymbol(movementRegex, lines[i], i, movementSymbols);
+		addPoryscriptSectionSymbol(mapscriptRegex, lines[i], i, mapscriptSymbols);
+		addPoryscriptSectionSymbol(textRegex, lines[i], i, textSymbols);
+	}
+	return {scripts: scriptSymbols, mapScripts: mapscriptSymbols, movementScripts: movementSymbols, textSections: textSymbols};
+}
 
 function readBackToNewLine(file: string, position: number) : number {
 	while(position != 0 && file[position] != '\n'){position--;}
@@ -568,7 +662,11 @@ documents.onDidClose(e => {
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
+documents.onDidChangeContent(async (change) => {
+	if(change.document.uri.startsWith("file://"))
+	{
+		globalSymbolMap.set(change.document.uri, parseDocumentSymbols(change.document.uri.substring(7)));
+	}
 	documentConstants.set(change.document.uri, parseDocumentConstants(change.document.uri));
 	validateTextDocument(change.document);
 });
@@ -621,8 +719,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
-connection
-
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
 	// If one of the include files changed, we need to reset our current command cache
@@ -652,6 +748,16 @@ function constantToCompletionItem(name: string, constant: ConstantSymbol) : Comp
 	return item;
 }
 
+function symbolToCompletionItem(symbol: SectionSymbol, kind: CompletionItemKind, detail?:string) : CompletionItem {
+	let item : CompletionItem = {
+		label: symbol.name,
+		kind: kind,
+		documentation: "",
+		detail: detail,
+	}
+	return item;
+}
+
 function commandToCompletionItem(id: string, command: Command) : CompletionItem {
 	let item : CompletionItem = {
 		label: id,
@@ -666,6 +772,16 @@ function commandToCompletionItem(id: string, command: Command) : CompletionItem 
 	
 	return item;
 }
+
+async function generateGlobalSymbolTable() : Promise<Array<PoryscriptSymbolCollection>>{
+	let out = new Array<PoryscriptSymbolCollection>();
+	for(let promise of globalSymbolMap.values())
+	{
+		out.push(await promise);
+	}
+	return out;
+}
+
 connection.onCompletion(
 	(async (_textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
 		// The pass parameter contains the position of the text document in
@@ -677,8 +793,12 @@ connection.onCompletion(
 		let constantsArray = new Array();
 		if(constants)
 			constantsArray = Array.from(constants).map(([key, value]) => constantToCompletionItem(key, value));
-		
-		return commandsArray.concat(constantsArray);
+		let symbols = await generateGlobalSymbolTable();
+		let scriptCompletions = symbols.flatMap(sym => sym.scripts).map(sym => symbolToCompletionItem(sym, CompletionItemKind.Function, "Script"));
+		let mapscriptCompletions = symbols.flatMap(sym => sym.mapScripts).map(sym => symbolToCompletionItem(sym, CompletionItemKind.Function, "Mapscript"));
+		let movementCompletions = symbols.flatMap(sym => sym.movementScripts).map(sym => symbolToCompletionItem(sym, CompletionItemKind.Field, "Movement Script"));
+		let textCompletions = symbols.flatMap(sym => sym.textSections).map(sym => symbolToCompletionItem(sym, CompletionItemKind.Field, "Text"));
+		return commandsArray.concat(constantsArray).concat(scriptCompletions).concat(mapscriptCompletions).concat(movementCompletions).concat(textCompletions);
 	}
 ));
 

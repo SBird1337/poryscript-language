@@ -62,8 +62,18 @@ export function activate(context: ExtensionContext) {
 			}
 			return "";
 		});
+		client.onRequest("poryscript/readfs", file => {
+			if(fs.existsSync(file))
+			{
+				let uri = Uri.file(file);
+				return workspace.openTextDocument(uri).then(doc => doc.getText());
+			}
+		});
+		client.onRequest("poryscript/getPoryscriptFiles", async () => {
+			let folder = workspace.workspaceFolders[0];
+			return await (await workspace.findFiles("**/*.{pory}", null, 1024)).map(uri => uri.path);
+		});
 	});
-
 	// Start the client. This will also launch the server
 	client.start();
 }
