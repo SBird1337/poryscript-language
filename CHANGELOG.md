@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2021-07-06
+
+ ### Added
+  - An icon
+  - Symbol lookup in other poryscript files for highlighting and completion hints
+  - Customizable token lookup in .h and .inc files for highlighting and completion hints
+  - Definition lookup provider
+
+### Changed
+  - Build order of semantic highlighter sorted by character index in line
+
 ## [2.1.0] - 2021-07-05
 
 ### Added

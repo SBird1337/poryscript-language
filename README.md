@@ -19,9 +19,52 @@ If the field is not set it defaults to the following setting:
 }
 ```
 
+The extension also parses customizable files to read values usually present when working with `poryscript`. A few are included in the default settings, but new ones can be configured or changed at will. Each entry contains a regular `expression`, a type which can be `special` or `define` and a `file` path. The first match group of the regular expression will be treated as the name of the defined token. The second group will be treated as a detail in the completion hint window. The default settings are:
+
+```json
+    "languageServerPoryscript.symbolIncludes": [
+    
+        {
+            "expression": "^\\s*def_special\\s+(\\w+)",
+            "type": "special",
+            "file": "data/specials.inc"
+        },
+        {
+            "expression": "^\\s*#define\\s+(FLAG_\\w+)\\s+(.+)",
+            "type": "define",
+            "file": "include/constants/flags.h"
+        },
+        {
+            "expression": "^\\s*#define\\s+(VAR_\\w+)\\s+(.+)",
+            "type": "define",
+            "file": "include/constants/vars.h"
+        },
+        {
+            "expression": "^\\s*#define\\s+(ITEM_\\w+)\\s+(.+)",
+            "type": "define",
+            "file": "include/constants/items.h"
+        },
+        {
+            "expression": "^\\s*#define\\s+(SE_\\w+)\\s+(.+)",
+            "type": "define",
+            "file": "include/constants/songs.h"
+        },
+        {
+            "expression": "^\\s*#define\\s+(MUS_\\w+)\\s+(.+)",
+            "type": "define",
+            "file": "include/constants/songs.h"
+        },
+        {
+            "expression": "^\\s*#define\\s+(MAP_SCRIPT_\\w+)\\s+(.+)",
+            "type": "define",
+            "file": "include/constants/map_scripts.h"
+        }
+    ]
+```
+
 ## Requirements
 
- * Visual Studio Code 1.31.1 (January 2019)
+ * Visual Studio Code ^1.44.0
 
 ## Known Issues
 
@@ -30,6 +73,12 @@ If the field is not set it defaults to the following setting:
 ## Release Notes
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
+
+### 2.2.0
+ * Added Completion hints and highlighting for symbols from other script files
+ * Added Completion hints and highlighting for custom includable files
+ * Added Definition Lookup Provider
+ * Added Icon
 
 ### 2.1.0
  * Several fixes in highlighting and semantic highlighting
