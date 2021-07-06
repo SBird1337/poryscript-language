@@ -126,7 +126,15 @@ connection.languages.semanticTokens.on(async (params : SemanticTokensParams) => 
 	
 	let lines = document.getText().split(/\r?\n/);
 	return await parseSemanticTokens(lines, builder, document.uri);
+});
 
+connection.languages.semanticTokens.onRange(async (params : SemanticTokensRangeParams) => {
+	let builder = new SemanticTokensBuilder();
+	let document = documents.get(params.textDocument.uri);
+	if(!document)
+		return builder.build();
+	let lines = document.getText(params.range).split(/\r?\n/);
+	return await parseSemanticTokens(lines, builder, document.uri);
 });
 
 function isWhitespaceOrParenthesis(char:string) : boolean
@@ -196,15 +204,15 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 					let index = lines[i].indexOf(key);
 					if(index != -1 && isSingleSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key)) {
 						if(value.parameters && value.parameters.length > 0)
-							builder.push(i, index, key.length, 1, 0);
+							foundTokens.push({start: index, len: key.length, tokenType: 1, tokenClass: 0});
 						else
-							builder.push(i, index, key.length, 0, 0);
+							foundTokens.push({start: index, len: key.length, tokenType: 0, tokenClass: 0});
 					}
 				}
 				else if(value.kind == CompletionItemKind.Constant) {
 					let index = lines[i].indexOf(key);
 					if(index != -1 && isFullSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key))
-						builder.push(i, index, key.length, 2, 0);
+						foundTokens.push({start: index, len: key.length, tokenType: 2, tokenClass: 0});
 				}
 			}
 		});
@@ -213,7 +221,7 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 				if(value.position.line != i) {
 					let index = lines[i].indexOf(value.name);
 					if(index != -1 && isFullSymbol(lines[i], index, key) && !isInCommentOrString(lines[i], index, key)) {
-						builder.push(i, index, value.name.length, 2, 0);
+						foundTokens.push({start: index, len: value.name.length, tokenType: 2, tokenClass: 0});
 					}
 				}
 			});
@@ -222,7 +230,7 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 			if(symbol.position.line != i) {
 				let index = lines[i].indexOf(symbol.name);
 				if(index != -1 && isFullSymbol(lines[i], index, symbol.name) && !isInCommentOrString(lines[i], index, symbol.name)) {
-					builder.push(i, index, symbol.name.length, 1, 0);
+					foundTokens.push({start: index, len: symbol.name.length, tokenType: 1, tokenClass: 0});
 				}
 			}
 		});
@@ -230,7 +238,7 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 			if(symbol.position.line != i) {
 				let index = lines[i].indexOf(symbol.name);
 				if(index != -1 && isFullSymbol(lines[i], index, symbol.name) && !isInCommentOrString(lines[i], index, symbol.name)) {
-					builder.push(i, index, symbol.name.length, 1, 0);
+					foundTokens.push({start: index, len: symbol.name.length, tokenType: 1, tokenClass: 0});
 				}
 			}
 		});
@@ -238,7 +246,7 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 			if(symbol.position.line != i) {
 				let index = lines[i].indexOf(symbol.name);
 				if(index != -1 && isFullSymbol(lines[i], index, symbol.name) && !isInCommentOrString(lines[i], index, symbol.name)) {
-					builder.push(i, index, symbol.name.length, 3, 0);
+					foundTokens.push({start: index, len: symbol.name.length, tokenType: 3, tokenClass: 0});
 				}
 			}
 		});
@@ -246,10 +254,15 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 			if(symbol.position.line != i) {
 				let index = lines[i].indexOf(symbol.name);
 				if(index != -1 && isFullSymbol(lines[i], index, symbol.name) && !isInCommentOrString(lines[i], index, symbol.name)) {
-					builder.push(i, index, symbol.name.length, 3, 0);
+					foundTokens.push({start: index, len: symbol.name.length, tokenType: 3, tokenClass: 0});
 				}
 			}
 		});
+		foundTokens.sort((token1, token2) => (token1.start < token2.start ? -1 : 1));
+		for(let token of foundTokens)
+		{
+			builder.push(i, token.start, token.len, token.tokenType, token.tokenClass);
+		}
 	}
 	return builder.build();
 }
