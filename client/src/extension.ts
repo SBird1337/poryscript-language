@@ -73,6 +73,9 @@ export function activate(context: ExtensionContext) {
 			let folder = workspace.workspaceFolders[0];
 			return await (await workspace.findFiles("**/*.{pory}", null, 1024)).map(uri => uri.path);
 		});
+		client.onRequest("poryscript/getfileuri", file => {
+			return "file://" + path.join(workspace.workspaceFolders[0].uri.fsPath, file);
+		});
 	});
 	// Start the client. This will also launch the server
 	client.start();

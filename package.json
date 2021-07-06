@@ -75,6 +75,26 @@
               "expression": "^\\s*#define\\s+(VAR_\\w+)\\s+(.+)",
               "type": "define",
               "file": "include/constants/vars.h"
+            },
+            {
+              "expression": "^\\s*#define\\s+(ITEM_\\w+)\\s+(.+)",
+              "type": "define",
+              "file": "include/constants/items.h"
+            },
+            {
+              "expression": "^\\s*#define\\s+(SE_\\w+)\\s+(.+)",
+              "type": "define",
+              "file": "include/constants/songs.h"
+            },
+            {
+              "expression": "^\\s*#define\\s+(MUS_\\w+)\\s+(.+)",
+              "type": "define",
+              "file": "include/constants/songs.h"
+            },
+            {
+              "expression": "^\\s*#define\\s+(MAP_SCRIPT_\\w+)\\s+(.+)",
+              "type": "define",
+              "file": "include/constants/map_scripts.h"
             }
           ],
           "description": "Files that are read as specified by `expression` to read additional symbol definitions."

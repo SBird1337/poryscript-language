@@ -40,7 +40,11 @@ import {
 	DeclarationLink,
 	Range,
 	WorkspaceFolder,
-	InitializedParams
+	InitializedParams,
+	TextDocumentIdentifier,
+	Definition,
+	DefinitionParams,
+	DefinitionLink
 } from 'vscode-languageserver/node';
 
 import {
@@ -49,6 +53,7 @@ import {
 
 import { Stack } from './datastructs';
 import { time } from 'console';
+import { connect } from 'http2';
 
 enum CommandParameterKind {
 	Required, Default, Optional
@@ -60,7 +65,7 @@ type Command = { documentation?: string, detail?: string, kind?: CompletionItemK
 
 type ConstantSymbol = {position: Position, name: string, resolution: string};
 
-type SectionSymbol = {position: Position, name: string};
+type SectionSymbol = {position: Position, name: string, uri: string};
 
 type PoryscriptSymbolCollection = {scripts: Array<SectionSymbol>, mapScripts: Array<SectionSymbol>, movementScripts: Array<SectionSymbol>, textSections: Array<SectionSymbol>};
 
@@ -68,7 +73,7 @@ type SemanticHighlightedRange = {start: number, len: number, tokenType: number, 
 
 type SettingsTokenInclude = {expression: string, type: string, file: string};
 
-type PoryscriptIncludedToken = {position: Position, name: string, type: string, value?: string};
+type PoryscriptIncludedToken = {position: Position, name: string, type: string, uri: string, value?: string};
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -118,9 +123,53 @@ connection.onInitialize((params: InitializeParams) => {
 					tokenTypes: ["keyword", "function", "enumMember", "variable"],
 					tokenModifiers: []
 				}
-			}
+			},
+			definitionProvider: true
 		}
 	};
+});
+
+connection.onDefinition(async(params: DefinitionParams): Promise<Definition | null> => {
+	let constants = await documentConstants.get(params.textDocument.uri);
+	let text = documents.get(params.textDocument.uri)?.getText()
+	if(!text)
+		return null;
+	let lines = text.split(/\r?\n/);
+	let line = lines[params.position.line];
+	if(constants) {
+		for(let key of constants.keys())
+		{
+			let value = constants.get(key)
+			if(!value)
+				continue;
+			let index = line.indexOf(key);
+			if(index != -1 && !isInCommentOrString(line, index, key) && isFullSymbol(line, index, key) && params.position.line != value.position.line && params.position.character > index && params.position.character < (index + key.length))  {
+				return Location.create(params.textDocument.uri, Range.create(value.position, Position.create(value.position.line, value.position.character + value.name.length)));
+			}
+		}
+	}
+	let symbolMap = await generateGlobalSymbolTable();
+	let scriptSymbols = symbolMap.flatMap((sym) => sym.scripts);
+	let movementSymbols = symbolMap.flatMap((sym) => sym.movementScripts);
+	let mapscriptSymbols = symbolMap.flatMap((sym) => sym.mapScripts);
+	let textSymbols = symbolMap.flatMap((sym) => sym.textSections);
+	for(let symbol of scriptSymbols.concat(movementSymbols).concat(mapscriptSymbols).concat(textSymbols)) {
+		if(symbol.uri == params.textDocument.uri && params.position.line == symbol.position.line)
+			continue;
+		let index = line.indexOf(symbol.name);
+		if(index != -1 && !isInCommentOrString(line, index, symbol.name) && isFullSymbol(line, index, symbol.name)  && params.position.character > index && params.position.character < (index + symbol.name.length)) {
+			return Location.create(symbol.uri, Range.create(symbol.position, Position.create(symbol.position.line, symbol.position.character + symbol.name.length)));
+		}	
+	}
+	let includedTokens = await generateGlobalIncludedTokensTable();
+	for(let token of includedTokens) {
+		let index = line.indexOf(token.name);
+		if(index != -1 && !isInCommentOrString(line, index, token.name) && isFullSymbol(line,index,token.name) && params.position.character > index && params.position.character < (index + token.name.length)) {
+			return Location.create(token.uri, Range.create(token.position, Position.create(token.position.line, token.position.character + token.name.length)));
+		}
+	}
+
+	return null;
 });
 
 connection.languages.semanticTokens.on(async (params : SemanticTokensParams) => {
@@ -314,9 +363,7 @@ interface PoryScriptSettings {
 // but could happen with other clients.
 const defaultSettings: PoryScriptSettings = { 
 	commandIncludes: ["asm/macros/event.inc", "asm/macros/movement.inc"],
-	symbolIncludes: [
-		{expression: "^\\s*def_special\\s+(\\w+)", type: "special", file: "data/specials.inc"}
-	]
+	symbolIncludes: []
 };
 let globalSettings: PoryScriptSettings = defaultSettings;
 
@@ -344,10 +391,10 @@ connection.onDidChangeConfiguration(change => {
 	documents.all().forEach(validateTextDocument);
 });
 
-function addPoryscriptSectionSymbol(re: RegExp, line: string, lineIndex: number, container: Array<SectionSymbol>) : void {
+function addPoryscriptSectionSymbol(re: RegExp, line: string, lineIndex: number, container: Array<SectionSymbol>, resource: string) : void {
 	let match = re.exec(line);
 	if(match != null)
-		container.push({position: Position.create(lineIndex, match.index), name: match[1]});
+		container.push({position: Position.create(lineIndex, line.indexOf(match[1])), name: match[1], uri: resource});
 }
 
 async function parseDocumentSymbols(file: string) : Promise<PoryscriptSymbolCollection> {
@@ -363,10 +410,10 @@ async function parseDocumentSymbols(file: string) : Promise<PoryscriptSymbolColl
 	let mapscriptSymbols = new Array<SectionSymbol>();
 	let textSymbols = new Array<SectionSymbol>();
 	for(let i = 0; i < lines.length; ++i) {
-		addPoryscriptSectionSymbol(scriptRegex, lines[i], i, scriptSymbols);
-		addPoryscriptSectionSymbol(movementRegex, lines[i], i, movementSymbols);
-		addPoryscriptSectionSymbol(mapscriptRegex, lines[i], i, mapscriptSymbols);
-		addPoryscriptSectionSymbol(textRegex, lines[i], i, textSymbols);
+		addPoryscriptSectionSymbol(scriptRegex, lines[i], i, scriptSymbols, "file://"+file);
+		addPoryscriptSectionSymbol(movementRegex, lines[i], i, movementSymbols, "file://"+file);
+		addPoryscriptSectionSymbol(mapscriptRegex, lines[i], i, mapscriptSymbols, "file://"+file);
+		addPoryscriptSectionSymbol(textRegex, lines[i], i, textSymbols, "file://"+file);
 	}
 	return {scripts: scriptSymbols, mapScripts: mapscriptSymbols, movementScripts: movementSymbols, textSections: textSymbols};
 }
@@ -563,7 +610,7 @@ async function parseDocumentConstants(resource : string) : Promise<Map<string, C
 		if(match != null) {
 			constants.set(match[1], {
 				name: match[1],
-				position: Position.create(i, match.index),
+				position: Position.create(i, lines[i].indexOf(match[1])),
 				resolution: match[2]
 			});
 		}
@@ -678,6 +725,7 @@ async function updateCommandsForDocument(textDocument: TextDocument) : Promise<v
 
 async function parseIncludedTokens(settings: SettingsTokenInclude) : Promise<Array<PoryscriptIncludedToken>> {
 	let text: string = await connection.sendRequest("poryscript/readfile", settings.file);
+	let resource: string = await connection.sendRequest("poryscript/getfileuri", settings.file);
 	let out = new Array<PoryscriptIncludedToken>();
 	let lines = text.split(/\r?\n/);
 	let regex = new RegExp(settings.expression);
@@ -688,7 +736,7 @@ async function parseIncludedTokens(settings: SettingsTokenInclude) : Promise<Arr
 			if(settings.type === "define")
 				currentValue = match[2];
 			
-			out.push({name: match[1], position: Position.create(i, match.index), type: settings.type, value: currentValue});
+			out.push({name: match[1], position: Position.create(i, lines[i].indexOf(match[1])), type: settings.type, uri: resource, value: currentValue});
 		}
 	}
 	return out;
