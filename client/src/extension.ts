@@ -41,8 +41,8 @@ export function activate(context: ExtensionContext) {
 		// Register the server for poryscript documents
 		documentSelector: [{ scheme: 'file', language: 'poryscript' }],
 		synchronize: {
-			// Notify the server about file changes to '.inc files contained in the workspace
-			fileEvents: workspace.createFileSystemWatcher('**/*.inc')
+			// Notify the server about file changes to *.inc, *.pory, *.h files contained in the workspace
+			fileEvents: [workspace.createFileSystemWatcher('**/*.inc'), workspace.createFileSystemWatcher('**/*.pory'), workspace.createFileSystemWatcher('**/*.h')]
 		}
 	};
 

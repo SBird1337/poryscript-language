@@ -39,7 +39,8 @@ import {
 	LocationLink,
 	DeclarationLink,
 	Range,
-	WorkspaceFolder
+	WorkspaceFolder,
+	InitializedParams
 } from 'vscode-languageserver/node';
 
 import {
@@ -64,6 +65,10 @@ type SectionSymbol = {position: Position, name: string};
 type PoryscriptSymbolCollection = {scripts: Array<SectionSymbol>, mapScripts: Array<SectionSymbol>, movementScripts: Array<SectionSymbol>, textSections: Array<SectionSymbol>};
 
 type SemanticHighlightedRange = {start: number, len: number, tokenType: number, tokenClass: number};
+
+type SettingsTokenInclude = {expression: string, type: string, file: string};
+
+type PoryscriptIncludedToken = {position: Position, name: string, type: string, value?: string};
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -188,11 +193,12 @@ function isInCommentOrString(line:string, index:number, key:string) : boolean
 async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBuilder, resource:string) {
 	let commands = await getOrScanDocumentCommands(resource);
 	let constants = await documentConstants.get(resource);
-	let globalSymbolMap = await generateGlobalSymbolTable();
-	let scriptSymbols = globalSymbolMap.flatMap((sym) => sym.scripts);
-	let movementSymbols = globalSymbolMap.flatMap((sym) => sym.movementScripts);
-	let mapscriptSymbols = globalSymbolMap.flatMap((sym) => sym.mapScripts);
-	let textSymbols = globalSymbolMap.flatMap((sym) => sym.textSections);
+	let symbolMap = await generateGlobalSymbolTable();
+	let scriptSymbols = symbolMap.flatMap((sym) => sym.scripts);
+	let movementSymbols = symbolMap.flatMap((sym) => sym.movementScripts);
+	let mapscriptSymbols = symbolMap.flatMap((sym) => sym.mapScripts);
+	let textSymbols = symbolMap.flatMap((sym) => sym.textSections);
+	let includedTokens = await generateGlobalIncludedTokensTable();
 
 	for(let i = 0; i < lines.length; ++i) {
 		let foundTokens: Array<SemanticHighlightedRange> = new Array<SemanticHighlightedRange>();
@@ -258,6 +264,18 @@ async function parseSemanticTokens(lines:Array<string>, builder:SemanticTokensBu
 				}
 			}
 		});
+		includedTokens.forEach(token => {
+			let index = lines[i].indexOf(token.name);
+			if(index != -1 && isFullSymbol(lines[i], index, token.name) && !isInCommentOrString(lines[i], index, token.name)) {
+				let highlightType = 0;
+				if(token.type === "special") {
+					highlightType = 1;
+				} else if(token.type === "define") {
+					highlightType = 2;
+				}
+				foundTokens.push({start: index, len: token.name.length, tokenType: highlightType, tokenClass: 0});
+			}
+		});
 		foundTokens.sort((token1, token2) => (token1.start < token2.start ? -1 : 1));
 		for(let token of foundTokens)
 		{
@@ -288,12 +306,18 @@ connection.onInitialized(async () => {
 // The example settings
 interface PoryScriptSettings {
 	commandIncludes: Array<string>;
+	symbolIncludes: Array<SettingsTokenInclude>;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: PoryScriptSettings = { commandIncludes: ["asm/macros/event.inc", "asm/macros/movement.inc"] };
+const defaultSettings: PoryScriptSettings = { 
+	commandIncludes: ["asm/macros/event.inc", "asm/macros/movement.inc"],
+	symbolIncludes: [
+		{expression: "^\\s*def_special\\s+(\\w+)", type: "special", file: "data/specials.inc"}
+	]
+};
 let globalSettings: PoryScriptSettings = defaultSettings;
 
 // Cache the settings of all open documents
@@ -302,6 +326,7 @@ let documentSettings: Map<string, Thenable<PoryScriptSettings>> = new Map();
 let documentCommands: Map<string, Thenable<Map<string, Command>>> = new Map();
 let documentConstants: Map<string, Thenable<Map<string, ConstantSymbol>>> = new Map();
 let globalSymbolMap: Map<string, Thenable<PoryscriptSymbolCollection>> = new Map();
+let globalIncludedTokenMap: Map<string, Thenable<Array<PoryscriptIncludedToken>>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
@@ -651,6 +676,23 @@ async function updateCommandsForDocument(textDocument: TextDocument) : Promise<v
 	await getOrScanDocumentCommands(textDocument.uri);
 }
 
+async function parseIncludedTokens(settings: SettingsTokenInclude) : Promise<Array<PoryscriptIncludedToken>> {
+	let text: string = await connection.sendRequest("poryscript/readfile", settings.file);
+	let out = new Array<PoryscriptIncludedToken>();
+	let lines = text.split(/\r?\n/);
+	let regex = new RegExp(settings.expression);
+	for(let i = 0; i < lines.length; ++i) {
+		let match = regex.exec(lines[i]);
+		if(match != null) {
+			let currentValue = undefined;
+			if(settings.type === "define")
+				currentValue = match[2];
+			
+			out.push({name: match[1], position: Position.create(i, match.index), type: settings.type, value: currentValue});
+		}
+	}
+	return out;
+}
 
 function getDocumentSettings(resource: string): Thenable<PoryScriptSettings> {
 	if (!hasConfigurationCapability) {
@@ -747,6 +789,15 @@ connection.onDidChangeWatchedFiles(_change => {
 			if(dirty) {
 				documents.all().forEach(updateCommandsForDocument);
 			}
+			if(change.uri.endsWith(".pory") && change.uri.startsWith("file://"))
+			{
+				globalSymbolMap.set(change.uri, parseDocumentSymbols(change.uri.substring(7)));
+			}
+			for(let setting of settings.symbolIncludes) {
+				if(change.uri.endsWith(setting.file)) {
+					globalIncludedTokenMap.set(setting.file+":"+setting.expression, parseIncludedTokens(setting));
+				}
+			}
 		});
 	});
 });
@@ -757,6 +808,26 @@ function constantToCompletionItem(name: string, constant: ConstantSymbol) : Comp
 		kind: CompletionItemKind.Constant,
 		documentation: "",
 		detail: ""
+	}
+	return item;
+}
+
+function includedTokenToCompletionItem(token: PoryscriptIncludedToken) : CompletionItem {
+	let completionKind: CompletionItemKind = CompletionItemKind.Value;
+	let detail: string = "";
+	if(token.type === "special") {
+		completionKind = CompletionItemKind.Function;
+		detail = "Special Function";
+	} else if(token.type === "define") {
+		completionKind = CompletionItemKind.Constant;
+		if(token.value)
+			detail = token.value;
+	}
+	let item: CompletionItem = {
+		label: token.name,
+		kind: completionKind,
+		documentation: "",
+		detail: detail,
 	}
 	return item;
 }
@@ -786,6 +857,16 @@ function commandToCompletionItem(id: string, command: Command) : CompletionItem 
 	return item;
 }
 
+async function generateGlobalIncludedTokensTable() : Promise<Array<PoryscriptIncludedToken>>
+{
+	let out = new Array<PoryscriptIncludedToken>();
+	for(let promise of globalIncludedTokenMap.values())
+	{
+		out = out.concat(await promise);
+	}
+	return out;
+}
+
 async function generateGlobalSymbolTable() : Promise<Array<PoryscriptSymbolCollection>>{
 	let out = new Array<PoryscriptSymbolCollection>();
 	for(let promise of globalSymbolMap.values())
@@ -811,7 +892,10 @@ connection.onCompletion(
 		let mapscriptCompletions = symbols.flatMap(sym => sym.mapScripts).map(sym => symbolToCompletionItem(sym, CompletionItemKind.Function, "Mapscript"));
 		let movementCompletions = symbols.flatMap(sym => sym.movementScripts).map(sym => symbolToCompletionItem(sym, CompletionItemKind.Field, "Movement Script"));
 		let textCompletions = symbols.flatMap(sym => sym.textSections).map(sym => symbolToCompletionItem(sym, CompletionItemKind.Field, "Text"));
-		return commandsArray.concat(constantsArray).concat(scriptCompletions).concat(mapscriptCompletions).concat(movementCompletions).concat(textCompletions);
+		let includedTokens = await generateGlobalIncludedTokensTable();
+		let includedTokensCompletions = includedTokens.map(token => includedTokenToCompletionItem(token));
+
+		return commandsArray.concat(constantsArray).concat(scriptCompletions).concat(mapscriptCompletions).concat(movementCompletions).concat(textCompletions).concat(includedTokensCompletions);
 	}
 ));
 
@@ -958,8 +1042,12 @@ connection.onSignatureHelp(async (params: TextDocumentPositionParams) : Promise<
 	};
 });
 
-documents.onDidOpen((e : TextDocumentChangeEvent<TextDocument>) => {
+documents.onDidOpen(async (e : TextDocumentChangeEvent<TextDocument>) => {
 	updateCommandsForDocument(e.document);
+	let settings = await getDocumentSettings(e.document.uri);
+	for(let setting of settings.symbolIncludes) {
+		globalIncludedTokenMap.set(setting.file+":"+setting.expression, parseIncludedTokens(setting));
+	}
 });
 
 // Make the text document manager listen on the connection

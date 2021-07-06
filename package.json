@@ -57,6 +57,28 @@
           ],
           "description": "Macro Files that should be read and handled by the IntelliSense of the langauge server."
         },
+        "languageServerPoryscript.symbolIncludes": {
+          "scope": "resource",
+          "type": "array",
+          "default": [
+            {
+              "expression": "^\\s*def_special\\s+(\\w+)",
+              "type": "special",
+              "file": "data/specials.inc"
+            },
+            {
+              "expression": "^\\s*#define\\s+(FLAG_\\w+)\\s+(.+)",
+              "type": "define",
+              "file": "include/constants/flags.h"
+            },
+            {
+              "expression": "^\\s*#define\\s+(VAR_\\w+)\\s+(.+)",
+              "type": "define",
+              "file": "include/constants/vars.h"
+            }
+          ],
+          "description": "Files that are read as specified by `expression` to read additional symbol definitions."
+        },
         "languageServerPoryscript.trace.server": {
           "scope": "window",
           "type": "string",
