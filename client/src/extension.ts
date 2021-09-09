@@ -63,9 +63,10 @@ export function activate(context: ExtensionContext) {
 			return "";
 		});
 		client.onRequest("poryscript/readfs", file => {
-			if(fs.existsSync(file))
+			let openPath = Uri.parse(file).fsPath;
+			if(fs.existsSync(openPath))
 			{
-				let uri = Uri.file(file);
+				let uri = Uri.file(openPath);
 				return workspace.openTextDocument(uri).then(doc => doc.getText());
 			}
 		});
