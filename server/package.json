@@ -1,7 +1,7 @@
 {
 	"name": "poryscript-language-server",
 	"description": "Language Server for the VS Code Poryscript Language Extension",
-	"version": "1.0.0",
+	"version": "2.1.1",
 	"author": "karathan",
 	"license": "MIT",
 	"engines": {

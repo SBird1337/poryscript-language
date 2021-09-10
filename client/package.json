@@ -3,7 +3,7 @@
     "description": "Client part of the VS Code Poryscript Language Extension",
     "author": "karathan",
     "license": "MIT",
-    "version": "1.0.0",
+    "version": "2.1.1",
     "publisher": "karathan",
     "repository": {
         "type": "git",
