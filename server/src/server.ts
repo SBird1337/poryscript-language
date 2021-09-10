@@ -400,6 +400,8 @@ function addPoryscriptSectionSymbol(re: RegExp, line: string, lineIndex: number,
 async function parseDocumentSymbols(file: string) : Promise<PoryscriptSymbolCollection> {
 	//NOTE: this will not work with multi line declared sections
 	let text = await connection.sendRequest("poryscript/readfs", file) as string;
+	if(!text)
+		text = "";
 	let lines = text.split(/\r?\n/);
 	let scriptRegex = /script\s+(\w+)\s*\{/;
 	let movementRegex = /movement\s+(\w+)\s*\{/;
