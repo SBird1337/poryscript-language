@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+  - npm audit fix
+  - broken windows paths (#19, #18)
+
 ## [2.2.0] - 2021-07-06
 
- ### Added
+### Added
   - An icon
   - Symbol lookup in other poryscript files for highlighting and completion hints
   - Customizable token lookup in .h and .inc files for highlighting and completion hints
