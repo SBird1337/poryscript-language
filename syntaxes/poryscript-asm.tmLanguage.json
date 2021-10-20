@@ -3,22 +3,30 @@
 	"name": "Poryscript-asm",
 	"patterns": [
 		{
-			"include": "#poryasm"
+			"include": "#string"
+		},
+		{
+			"include": "source.arm"
 		}
 	],
 	"repository": {
-		"poryasm": {
+
+		"string": {
+			"name": "string.quoted.double.pory",
+			"begin": "\"",
+			"end": "\"",
 			"patterns": [
 				{
-					"name": "source.arm.embedded.pory",
-					"patterns": [
-						{
-							"include": "source.pory"
-						},
-						{
-							"include": "source.arm"
-						}
-					]
+					"name": "constant.character.escape.pory.asm",
+					"match": "\\\\."
+				},
+				{
+					"name": "constant.character.escape.pory.asm",
+					"match": "{[\\w ]+}"
+				},
+				{
+					"name": "constant.character.escape.pory.asm",
+					"match": "\\$"
 				}
 			]
 		}

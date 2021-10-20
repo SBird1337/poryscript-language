@@ -177,6 +177,25 @@
 					},
 					"patterns": [
 						{
+							"name": "string.quoted.double.pory",
+							"begin": "\"",
+							"end": "\"",
+							"patterns": [
+								{
+									"name": "constant.character.escape.pory",
+									"match": "\\\\."
+								},
+								{
+									"name": "constant.character.escape.pory",
+									"match": "{[\\w ]+}"
+								},
+								{
+									"name": "constant.character.escape.pory",
+									"match": "\\$"
+								}
+							]
+						},
+						{
 							"include": "source.arm"
 						}
 					]
