@@ -17,7 +17,8 @@
     "Programming Languages"
   ],
   "activationEvents": [
-    "onLanguage:poryscript"
+    "onLanguage:poryscript",
+    "onLanguage:poryscript-asm"
   ],
   "main": "./client/out/extension",
   "contributes": {
