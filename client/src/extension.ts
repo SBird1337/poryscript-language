@@ -39,7 +39,7 @@ export function activate(context: ExtensionContext) {
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
 		// Register the server for poryscript documents
-		documentSelector: [{ scheme: 'file', language: 'poryscript' }],
+		documentSelector: [{ scheme: 'file', language: 'poryscript' }, {scheme: 'file', language: 'poryscript-asm'}],
 		synchronize: {
 			// Notify the server about file changes to *.inc, *.pory, *.h files contained in the workspace
 			fileEvents: [workspace.createFileSystemWatcher('**/*.inc'), workspace.createFileSystemWatcher('**/*.pory'), workspace.createFileSystemWatcher('**/*.h')]
