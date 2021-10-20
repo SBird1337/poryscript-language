@@ -13,7 +13,7 @@
 
 		"string": {
 			"name": "string.quoted.double.pory",
-			"begin": "\"",
+			"begin": "(?<=.string )\"",
 			"end": "\"",
 			"patterns": [
 				{
