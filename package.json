@@ -40,10 +40,10 @@
           "Poryasm",
           "poryasm"
         ],
-				"filenames": [
-					"text.inc",
-					"scripts.inc"
-				],
+        "filenames": [
+          "text.inc",
+          "scripts.inc"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -57,14 +57,14 @@
         }
       },
       {
-				"language": "poryscript-asm",
-				"scopeName": "source.pory.asm",
-				"path": "./syntaxes/poryscript-asm.tmLanguage.json",
-				"embeddedLanguages": {
-					"source.arm": "arm",
-					"source.pory": "poryscript"
-				}
-			}
+        "language": "poryscript-asm",
+        "scopeName": "source.pory.asm",
+        "path": "./syntaxes/poryscript-asm.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.arm": "arm",
+          "source.pory": "poryscript"
+        }
+      }
     ],
     "configuration": {
       "type": "object",
