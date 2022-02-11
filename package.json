@@ -17,7 +17,8 @@
     "Programming Languages"
   ],
   "activationEvents": [
-    "onLanguage:poryscript"
+    "onLanguage:poryscript",
+    "onLanguage:poryscript-asm"
   ],
   "main": "./client/out/extension",
   "contributes": {
@@ -32,6 +33,18 @@
           ".pory"
         ],
         "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "poryscript-asm",
+        "aliases": [
+          "Poryasm",
+          "poryasm"
+        ],
+        "filenames": [
+          "text.inc",
+          "scripts.inc"
+        ],
+        "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
@@ -41,6 +54,15 @@
         "path": "./syntaxes/poryscript.tmLanguage.json",
         "embeddedLanguages": {
           "source.arm": "arm"
+        }
+      },
+      {
+        "language": "poryscript-asm",
+        "scopeName": "source.pory.asm",
+        "path": "./syntaxes/poryscript-asm.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.arm": "arm",
+          "source.pory": "poryscript"
         }
       }
     ],
