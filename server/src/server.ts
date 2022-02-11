@@ -578,7 +578,7 @@ function parseAssemblyConstants(file: string) : Map<string, Command> {
 
 function parseMovementConstants(file: string) : Map<string, Command> {
 	let commands : Map<string, Command> = new Map();
-	let re = /^[\t ]*(?:create_movement_action)[\t ]* ([\w\d]+)[\t ]*$/gm;
+	let re = /^[\t ]*(?:create_movement_action)[\t ]* ([\w\d]+),[\t ]*[\w\d]*$/gm;
 	let match = re.exec(file);
 	while(match != null) {
 		let key = match[1];
