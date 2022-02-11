@@ -74,6 +74,12 @@ The extension also parses customizable files to read values usually present when
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 2.3.0
+
+* npm audit fix
+* update include directives for modern pret-style movement constants
+* Added support for assembly-style scripts (Language `poryasm`)
+
 ### 2.2.1
 
 * Fixed broken windows paths for `readfs`client commands

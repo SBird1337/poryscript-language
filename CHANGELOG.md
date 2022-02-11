@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2022-02-11
+
+### Fixed
+
+ * npm audit fix
+ * movement constant loading updated for modern pret-style repositories
+
+### Added
+
+ * Language Support for assembly style scrips (Language `Poryasm`)
+
 ## [2.2.1] - 2021-10-09
 
 ### Fixed
