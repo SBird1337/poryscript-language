@@ -15,23 +15,6 @@
 				"type": "npm",
 				"script": "watch"
 			}
-		},
-		{
-			"type": "node",
-			"request": "attach",
-			"name": "Attach to Server",
-			"port": 6009,
-			"restart": true,
-			"sourceMaps" : true,
-			"localRoot": "${workspaceRoot}/server",
-			"remoteRoot": "${workspaceRoot}/server",
-			"outFiles": ["${workspaceRoot}/server/out/**/*.js"]
 		}
     ],
-	"compounds": [
-		{
-			"name": "Client + Server",
-			"configurations": ["Launch Client", "Attach to Server"]
-        }
-    ]
 }

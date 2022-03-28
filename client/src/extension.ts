@@ -1,39 +1,35 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as path from 'path';
 import * as fs from 'fs';
 import { workspace, ExtensionContext, Uri } from 'vscode';
+import * as url from "url";
 
 import {
+	Executable,
 	LanguageClient,
 	LanguageClientOptions,
 	ServerOptions,
-	TransportKind
 } from 'vscode-languageclient/node';
+import { GetPlsBinaryName } from './env';
 
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-	// The server is implemented in node
-	let serverModule = context.asAbsolutePath(
-		path.join('server', 'out', 'server.js')
-	);
-	// The debug options for the server
-	// --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging
-	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
+
+	const debugPlsPath = context.asAbsolutePath(path.join('poryscript-pls', GetPlsBinaryName()))
+
+	if (!debugPlsPath) {
+		throw new Error("Couldn't fetch poryscript-pls binary");
+	}
+
+	let debugServerExecutable : Executable = {
+		command : debugPlsPath
+	};
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
-	let serverOptions: ServerOptions = {
-		run: { module: serverModule, transport: TransportKind.ipc },
-		debug: {
-			module: serverModule,
-			transport: TransportKind.ipc,
-			options: debugOptions
-		}
+	const serverOptions: ServerOptions = {
+		debug: debugServerExecutable,
+		run: debugServerExecutable // TODO: Fetch and run release binary for release environments
 	};
 
 	// Options to control the language client
@@ -75,10 +71,9 @@ export function activate(context: ExtensionContext) {
 			return await (await workspace.findFiles("**/*.{pory}", null, 1024)).map(uri => uri.path);
 		});
 		client.onRequest("poryscript/getfileuri", file => {
-			return "file://" + path.join(workspace.workspaceFolders[0].uri.fsPath, file);
+			return url.pathToFileURL(path.join(workspace.workspaceFolders[0].uri.fsPath, file)).toString();
 		});
 	});
-	// Start the client. This will also launch the server
 	client.start();
 }
 
