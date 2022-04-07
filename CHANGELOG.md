@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+ * Adds support for poryscript compiler diagnostics
+ * `raw` statements are now collapsable
+
+### Breaking
+
+ * Substitute internal typescript language service provider for [poryscript-pls](https://github.com/huderlem/poryscript-pls)
+
+
 ## [2.3.0] - 2022-02-11
 
 ### Fixed

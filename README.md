@@ -74,6 +74,12 @@ The extension also parses customizable files to read values usually present when
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 3.0.0
+
+* Substitute internal typescript language service provider for [poryscript-pls](https://github.com/huderlem/poryscript-pls)
+* Adds support for poryscript compiler diagnostics
+* `raw` statements are now collapsable
+
 ### 2.3.0
 
 * npm audit fix
