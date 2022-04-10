@@ -131,6 +131,20 @@
           ],
           "default": "off",
           "description": "Traces the communication between VS Code and the language server."
+        },
+        "languageServerPoryscript.poryscript-pls": {
+          "type": "object",
+          "default": {},
+          "description": "Settings passed down to poryscript-pls server",
+          "scope": "resource"
+        },
+        "languageServerPoryscript.poryscript-pls.path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "When specified, uses the poryscript-pls binary at a given path"
         }
       }
     }
@@ -149,5 +163,8 @@
     "eslint": "^7.26.0",
     "mocha": "^9.2.0",
     "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
   }
 }

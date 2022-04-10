@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { workspace, ExtensionContext, Uri } from 'vscode';
 import * as url from "url";
+import { getServer } from './env';
 
 import {
 	Executable,
@@ -13,23 +14,32 @@ import { GetPlsBinaryName } from './env';
 
 let client: LanguageClient;
 
-export function activate(context: ExtensionContext) {
-
+export async function activate(context: ExtensionContext) {
+	const configuration = workspace.getConfiguration();
+	const customBinPath = configuration.get<string>("languageServerPoryscript.poryscript-pls.path");
 	const debugPlsPath = context.asAbsolutePath(path.join('poryscript-pls', GetPlsBinaryName()))
+	const releasePlsPath =  customBinPath || await getServer({
+		askBeforeDownload : true,
+		package: { releaseTag: "0.0.1"}
+	});
 
 	if (!debugPlsPath) {
 		throw new Error("Couldn't fetch poryscript-pls binary");
 	}
 
-	let debugServerExecutable : Executable = {
+	const debugServerExecutable : Executable = {
 		command : debugPlsPath
+	};
+
+	const releaseServerExecutable : Executable = {
+		command: releasePlsPath
 	};
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	const serverOptions: ServerOptions = {
-		debug: debugServerExecutable,
-		run: debugServerExecutable // TODO: Fetch and run release binary for release environments
+		debug: releaseServerExecutable, //TODO: Use debug executable for debug environment
+		run: releaseServerExecutable
 	};
 
 	// Options to control the language client
@@ -83,3 +93,4 @@ export function deactivate(): Thenable<void> | undefined {
 	}
 	return client.stop();
 }
+
