@@ -23,7 +23,7 @@ export async function activate(context: ExtensionContext) {
 		package: { releaseTag: "0.0.1"}
 	});
 
-	if (!debugPlsPath) {
+	if (!releasePlsPath) {
 		throw new Error("Couldn't fetch poryscript-pls binary");
 	}
 
@@ -38,7 +38,7 @@ export async function activate(context: ExtensionContext) {
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	const serverOptions: ServerOptions = {
-		debug: releaseServerExecutable, //TODO: Use debug executable for debug environment
+		debug: debugServerExecutable,
 		run: releaseServerExecutable
 	};
 
