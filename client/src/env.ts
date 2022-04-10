@@ -85,7 +85,7 @@ export async function getServer({askBeforeDownload, package: pkg} : PoryscriptPl
     }
 
     if (askBeforeDownload) {
-        const userResponse = await vs.window.showInformationMessage(`\`poryscript-pls\` ${pkg.releaseTag} is not installed.\nInstall to ${dir}`, 'Download');
+        const userResponse = await vs.window.showInformationMessage(`\`poryscript-pls\` ${pkg.releaseTag} is not installed.\nInstall to ${dir}?`, 'Download');
         if (userResponse !== 'Download') {
             return dest;
         }
