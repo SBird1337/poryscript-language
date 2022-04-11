@@ -10,14 +10,14 @@ import {
 	LanguageClientOptions,
 	ServerOptions,
 } from 'vscode-languageclient/node';
-import { GetPlsBinaryName } from './env';
+import { GetPlsDebugBinaryName } from './env';
 
 let client: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
 	const configuration = workspace.getConfiguration();
 	const customBinPath = configuration.get<string>("languageServerPoryscript.poryscript-pls.path");
-	const debugPlsPath = context.asAbsolutePath(path.join('poryscript-pls', GetPlsBinaryName()))
+	const debugPlsPath = context.asAbsolutePath(path.join('poryscript-pls', GetPlsDebugBinaryName()))
 	const releasePlsPath =  customBinPath || await getServer({
 		askBeforeDownload : true,
 		package: { releaseTag: "0.0.1"}
