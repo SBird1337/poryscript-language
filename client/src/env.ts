@@ -8,7 +8,6 @@ import { download, fetchRelease } from "./net";
 const stat = promisify(fs.stat);
 const mkdir = promisify(fs.mkdir);
 
-// FIXME: Recheck binary names with CI
 export function GetPlsBinaryName() : string | undefined {
     if (process.arch === 'x64' || process.arch === 'ia32') {
         if (process.platform == 'linux') {
@@ -18,7 +17,19 @@ export function GetPlsBinaryName() : string | undefined {
             return 'poryscript-pls-mac';
         }
         if (process.platform === 'win32') {
-            return 'poryscript-pls-win.exe'
+            return 'poryscript-pls-windows.exe'
+        }
+    }
+    return undefined
+}
+
+export function GetPlsDebugBinaryName() : string {
+    if (process.arch === 'x64' || process.arch === 'ia32') {
+        if (process.platform == 'linux' || process.platform === 'darwin') {
+            return 'poryscript-pls';
+        }
+        if (process.platform === 'win32') {
+            return 'poryscript-pls.exe'
         }
     }
     return undefined
