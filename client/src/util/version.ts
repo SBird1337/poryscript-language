@@ -2,8 +2,8 @@ import { GithubRelease } from "../net";
 
 export function getNewestRelease(majorVersion: string, releases: Array<GithubRelease>) : GithubRelease | undefined {
     let found : GithubRelease = undefined;
-    let bestMinor : Number = 0;
-    let bestFixed : Number = 0;
+    let bestMinor : Number = -1;
+    let bestFixed : Number = -1;
     for (const release of releases) {
         // Check if the release name follow semantic versioning
 
@@ -25,8 +25,10 @@ export function getNewestRelease(majorVersion: string, releases: Array<GithubRel
         const currentFixed = parseInt(semantic[2]);
         if (currentMinor > bestMinor) {
             bestMinor = currentMinor;
+            bestFixed = currentFixed;
             found = release;
         } else if (currentMinor === bestMinor && currentFixed > bestFixed) {
+            bestMinor = currentMinor;
             bestFixed = currentFixed;
             found = release;
         }

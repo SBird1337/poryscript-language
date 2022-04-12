@@ -150,7 +150,7 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "cd client && cd .. && npm run compile",
+        "vscode:prepublish": "cd client && npm run test && cd .. && npm run compile",
         "compile": "tsc -b",
         "watch": "tsc -b -w",
         "postinstall": "cd client && npm install && cd .."
