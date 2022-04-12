@@ -3,10 +3,15 @@ import * as path from 'path';
 import * as vs from 'vscode';
 import { promisify } from "util";
 import * as fs from 'fs';
-import { download, fetchRelease } from "./net";
+import { download, fetchRelease, fetchAvailableReleases } from "./net";
+import { getNewestRelease } from "./util/version";
+import * as cp from 'child_process';
 
 const stat = promisify(fs.stat);
 const mkdir = promisify(fs.mkdir);
+const exec = promisify(cp.exec);
+
+const REQUESTED_MAJOR_VERSION = '0';
 
 export function GetPlsBinaryName() : string | undefined {
     if (process.arch === 'x64' || process.arch === 'ia32') {
@@ -50,29 +55,7 @@ export function GetInstallDir() : string | undefined {
     return undefined;
 }
 
-export function GetMetadataDir() : string | undefined {
-    if (process.platform === 'linux' || process.platform === 'darwin') {
-        const { HOME, XDG_CONFIG_HOME } = process.env;
-        const baseDir = XDG_CONFIG_HOME || (HOME && path.join(HOME, '.config'));
-        return baseDir && path.resolve(path.join(baseDir, 'poryscript-pls'));
-    } else if (process.platform == 'win32') {
-        const { LocalAppData } = process.env;
-        return ( LocalAppData && path.resolve(path.join(LocalAppData, 'poryscript-pls')) );
-    }
-}
-
-interface PoryscriptPlsConfig {
-    askBeforeDownload?: boolean;
-    package: {
-        releaseTag: string;
-    };
-}
-
-/**
- * TODO:
- * Fetch and handle metadata
- */
-export async function getServer({askBeforeDownload, package: pkg} : PoryscriptPlsConfig) : Promise<string | undefined> {
+export async function getServer(askBeforeDownload : boolean) : Promise<string | undefined> {
     let binaryName = GetPlsBinaryName();
     if (binaryName === undefined) {
         vs.window.showErrorMessage(
@@ -86,25 +69,45 @@ export async function getServer({askBeforeDownload, package: pkg} : PoryscriptPl
     }
     const dir = GetInstallDir();
     if (!dir) {
-        return;
+        return undefined;
     }
     await ensureDir(dir);
     const dest = path.join(dir, binaryName);
     const exists = await stat(dest).catch(() => false);
+    const releases = await fetchAvailableReleases('huderlem', 'poryscript-pls');
+    const bestFittingRelease = getNewestRelease(REQUESTED_MAJOR_VERSION, releases);
+    if (!bestFittingRelease) {
+        vs.window.showErrorMessage(
+            "Could not find poryscript-pls release with requested " + 
+            "major version " + REQUESTED_MAJOR_VERSION + "."
+        )
+    }
     if (exists) {
-        return dest;
+        const currentVersion = await (await exec(dest + ' -v')).stdout.trim();
+        if (bestFittingRelease.name === currentVersion)
+            return dest;
+        if (askBeforeDownload) {
+            const userResponse = await vs.window.showErrorMessage(`A new version of poryscript-pls was found.\nDownload version ${bestFittingRelease.name} to ${dir}?`, 'Download', 'Skip');
+            if (userResponse !== 'Download')
+                return dest;
+        }
+        const artifact = bestFittingRelease.assets.find(asset => asset.name === binaryName);
+        if (!artifact) {
+            throw new Error(`Bad release: ${JSON.stringify(bestFittingRelease)}`);
+        }
+    
+        await download(artifact.browser_download_url, dest, 'Downloading poryscript-pls', {mode: 0o755});
     }
 
     if (askBeforeDownload) {
-        const userResponse = await vs.window.showInformationMessage(`\`poryscript-pls\` ${pkg.releaseTag} is not installed.\nInstall to ${dir}?`, 'Download');
+        const userResponse = await vs.window.showInformationMessage(`poryscript-pls is not installed.\nDownload version ${bestFittingRelease.name} to ${dir}?`, 'Download');
         if (userResponse !== 'Download') {
             return dest;
         }
     }
-    const release = await fetchRelease('huderlem', 'poryscript-pls', pkg.releaseTag);
-    const artifact = release.assets.find(asset => asset.name === binaryName);
+    const artifact = bestFittingRelease.assets.find(asset => asset.name === binaryName);
     if (!artifact) {
-        throw new Error(`Bad release: ${JSON.stringify(release)}`);
+        throw new Error(`Bad release: ${JSON.stringify(bestFittingRelease)}`);
     }
 
     await download(artifact.browser_download_url, dest, 'Downloading poryscript-pls', {mode: 0o755});

@@ -18,10 +18,7 @@ export async function activate(context: ExtensionContext) {
 	const configuration = workspace.getConfiguration();
 	const customBinPath = configuration.get<string>("languageServerPoryscript.poryscript-pls.path");
 	const debugPlsPath = context.asAbsolutePath(path.join('poryscript-pls', GetPlsDebugBinaryName()))
-	const releasePlsPath =  customBinPath || await getServer({
-		askBeforeDownload : true,
-		package: { releaseTag: "0.0.1"}
-	});
+	const releasePlsPath =  customBinPath || await getServer(true);
 
 	if (!releasePlsPath) {
 		throw new Error("Couldn't fetch poryscript-pls binary");

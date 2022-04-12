@@ -11,6 +11,42 @@ const pipeline = util.promisify(stream.pipeline);
 
 const GITHUB_API_ENDPOINT_URL = 'https://api.github.com';
 
+export async function fetchAvailableReleases(
+  owner: string,
+  repository: string
+): Promise<Array<GithubRelease>> {
+  const apiEndpointPath = `/repos/${owner}/${repository}/releases`;
+
+  const requestUrl = GITHUB_API_ENDPOINT_URL + apiEndpointPath;
+
+  console.debug(
+    `Issuing request for releases metadata to `,
+    requestUrl
+  );
+
+  const response = await fetch(requestUrl, {
+    headers: { Accept: 'application/vnd.github.v3+json'},
+  });
+
+  if (!response.ok) {
+    console.error('Error fetching releases info', {
+      requestUrl,
+      response: {
+        headers: response.headers,
+        status: response.status,
+        body: await response.text(),
+      },
+    });
+
+    throw new Error(
+      `Got response ${response.status} when trying to fetch ` + 
+        `releases info for ${owner}/${repository}`
+    );
+  }
+  const releases: Array<GithubRelease> = await (response.json()) as Array<GithubRelease>;
+  return releases;
+}
+
 export async function fetchRelease(
   owner: string,
   repository: string,
