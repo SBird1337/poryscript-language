@@ -47,46 +47,6 @@ export async function fetchAvailableReleases(
   return releases;
 }
 
-export async function fetchRelease(
-  owner: string,
-  repository: string,
-  releaseTag: string,
-): Promise<GithubRelease> {
-  const apiEndpointPath = `/repos/${owner}/${repository}/releases/tags/${releaseTag}`;
-
-  const requestUrl = GITHUB_API_ENDPOINT_URL + apiEndpointPath;
-
-  console.debug(
-    'Issuing request for released artifacts metadata to',
-    requestUrl,
-  );
-
-  const response = await fetch(requestUrl, {
-    headers: { Accept: 'application/vnd.github.v3+json' },
-  });
-
-  if (!response.ok) {
-    console.error('Error fetching artifact release info', {
-      requestUrl,
-      releaseTag,
-      response: {
-        headers: response.headers,
-        status: response.status,
-        body: await response.text(),
-      },
-    });
-
-    throw new Error(
-      `Got response ${response.status} when trying to fetch ` +
-        `release info for ${releaseTag} release`,
-    );
-  }
-
-  // We skip runtime type checks for simplicity (here we cast from `any` to `GithubRelease`)
-  const release: GithubRelease = (await response.json()) as GithubRelease;
-  return release;
-}
-
 // We omit declaration of tremendous amount of fields that we are not using here
 export interface GithubRelease {
   name: string;

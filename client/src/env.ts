@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vs from 'vscode';
 import { promisify } from "util";
 import * as fs from 'fs';
-import { download, fetchRelease, fetchAvailableReleases } from "./net";
+import { download, fetchAvailableReleases } from "./net";
 import { getNewestRelease } from "./util/version";
 import * as cp from 'child_process';
 
