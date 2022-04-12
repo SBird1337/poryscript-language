@@ -1,170 +1,170 @@
 {
-  "name": "poryscript",
-  "displayName": "Poryscript",
-  "description": "Syntax highlighting for Poryscript script language",
-  "version": "3.0.0",
-  "publisher": "karathan",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/SBird1337/poryscript-language.git"
-  },
-  "icon": "images/icon.png",
-  "engines": {
-    "vscode": "^1.44.0"
-  },
-  "categories": [
-    "Programming Languages"
-  ],
-  "activationEvents": [
-    "onLanguage:poryscript",
-    "onLanguage:poryscript-asm"
-  ],
-  "main": "./client/out/extension",
-  "contributes": {
-    "languages": [
-      {
-        "id": "poryscript",
-        "aliases": [
-          "Poryscript",
-          "poryscript"
-        ],
-        "extensions": [
-          ".pory"
-        ],
-        "configuration": "./language-configuration.json"
-      },
-      {
-        "id": "poryscript-asm",
-        "aliases": [
-          "Poryasm",
-          "poryasm"
-        ],
-        "filenames": [
-          "text.inc",
-          "scripts.inc"
-        ],
-        "configuration": "./language-configuration.json"
-      }
+    "name": "poryscript",
+    "displayName": "Poryscript",
+    "description": "Syntax highlighting for Poryscript script language",
+    "version": "3.0.0",
+    "publisher": "karathan",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/SBird1337/poryscript-language.git"
+    },
+    "icon": "images/icon.png",
+    "engines": {
+        "vscode": "^1.44.0"
+    },
+    "categories": [
+        "Programming Languages"
     ],
-    "grammars": [
-      {
-        "language": "poryscript",
-        "scopeName": "source.pory",
-        "path": "./syntaxes/poryscript.tmLanguage.json",
-        "embeddedLanguages": {
-          "source.arm": "arm"
-        }
-      },
-      {
-        "language": "poryscript-asm",
-        "scopeName": "source.pory.asm",
-        "path": "./syntaxes/poryscript-asm.tmLanguage.json",
-        "embeddedLanguages": {
-          "source.arm": "arm",
-          "source.pory": "poryscript"
-        }
-      }
+    "activationEvents": [
+        "onLanguage:poryscript",
+        "onLanguage:poryscript-asm"
     ],
-    "configuration": {
-      "type": "object",
-      "title": "Poryscript extension configuration",
-      "properties": {
-        "languageServerPoryscript.commandIncludes": {
-          "scope": "resource",
-          "type": "array",
-          "default": [
-            "asm/macros/event.inc",
-            "asm/macros/movement.inc"
-          ],
-          "description": "Macro Files that should be read and handled by the IntelliSense of the langauge server."
-        },
-        "languageServerPoryscript.symbolIncludes": {
-          "scope": "resource",
-          "type": "array",
-          "default": [
+    "main": "./client/out/extension",
+    "contributes": {
+        "languages": [
             {
-              "expression": "^\\s*def_special\\s+(\\w+)",
-              "type": "special",
-              "file": "data/specials.inc"
+                "id": "poryscript",
+                "aliases": [
+                    "Poryscript",
+                    "poryscript"
+                ],
+                "extensions": [
+                    ".pory"
+                ],
+                "configuration": "./language-configuration.json"
             },
             {
-              "expression": "^\\s*#define\\s+(FLAG_\\w+)\\s+(.+)",
-              "type": "define",
-              "file": "include/constants/flags.h"
-            },
-            {
-              "expression": "^\\s*#define\\s+(VAR_\\w+)\\s+(.+)",
-              "type": "define",
-              "file": "include/constants/vars.h"
-            },
-            {
-              "expression": "^\\s*#define\\s+(ITEM_\\w+)\\s+(.+)",
-              "type": "define",
-              "file": "include/constants/items.h"
-            },
-            {
-              "expression": "^\\s*#define\\s+(SE_\\w+)\\s+(.+)",
-              "type": "define",
-              "file": "include/constants/songs.h"
-            },
-            {
-              "expression": "^\\s*#define\\s+(MUS_\\w+)\\s+(.+)",
-              "type": "define",
-              "file": "include/constants/songs.h"
-            },
-            {
-              "expression": "^\\s*#define\\s+(MAP_SCRIPT_\\w+)\\s+(.+)",
-              "type": "define",
-              "file": "include/constants/map_scripts.h"
+                "id": "poryscript-asm",
+                "aliases": [
+                    "Poryasm",
+                    "poryasm"
+                ],
+                "filenames": [
+                    "text.inc",
+                    "scripts.inc"
+                ],
+                "configuration": "./language-configuration.json"
             }
-          ],
-          "description": "Files that are read as specified by `expression` to read additional symbol definitions."
-        },
-        "languageServerPoryscript.trace.server": {
-          "scope": "window",
-          "type": "string",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
-          "default": "off",
-          "description": "Traces the communication between VS Code and the language server."
-        },
-        "languageServerPoryscript.poryscript-pls": {
-          "type": "object",
-          "default": {},
-          "description": "Settings passed down to poryscript-pls server",
-          "scope": "resource"
-        },
-        "languageServerPoryscript.poryscript-pls.path": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "description": "When specified, uses the poryscript-pls binary at a given path"
+        ],
+        "grammars": [
+            {
+                "language": "poryscript",
+                "scopeName": "source.pory",
+                "path": "./syntaxes/poryscript.tmLanguage.json",
+                "embeddedLanguages": {
+                    "source.arm": "arm"
+                }
+            },
+            {
+                "language": "poryscript-asm",
+                "scopeName": "source.pory.asm",
+                "path": "./syntaxes/poryscript-asm.tmLanguage.json",
+                "embeddedLanguages": {
+                    "source.arm": "arm",
+                    "source.pory": "poryscript"
+                }
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Poryscript extension configuration",
+            "properties": {
+                "languageServerPoryscript.commandIncludes": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        "asm/macros/event.inc",
+                        "asm/macros/movement.inc"
+                    ],
+                    "description": "Macro Files that should be read and handled by the IntelliSense of the langauge server."
+                },
+                "languageServerPoryscript.symbolIncludes": {
+                    "scope": "resource",
+                    "type": "array",
+                    "default": [
+                        {
+                            "expression": "^\\s*def_special\\s+(\\w+)",
+                            "type": "special",
+                            "file": "data/specials.inc"
+                        },
+                        {
+                            "expression": "^\\s*#define\\s+(FLAG_\\w+)\\s+(.+)",
+                            "type": "define",
+                            "file": "include/constants/flags.h"
+                        },
+                        {
+                            "expression": "^\\s*#define\\s+(VAR_\\w+)\\s+(.+)",
+                            "type": "define",
+                            "file": "include/constants/vars.h"
+                        },
+                        {
+                            "expression": "^\\s*#define\\s+(ITEM_\\w+)\\s+(.+)",
+                            "type": "define",
+                            "file": "include/constants/items.h"
+                        },
+                        {
+                            "expression": "^\\s*#define\\s+(SE_\\w+)\\s+(.+)",
+                            "type": "define",
+                            "file": "include/constants/songs.h"
+                        },
+                        {
+                            "expression": "^\\s*#define\\s+(MUS_\\w+)\\s+(.+)",
+                            "type": "define",
+                            "file": "include/constants/songs.h"
+                        },
+                        {
+                            "expression": "^\\s*#define\\s+(MAP_SCRIPT_\\w+)\\s+(.+)",
+                            "type": "define",
+                            "file": "include/constants/map_scripts.h"
+                        }
+                    ],
+                    "description": "Files that are read as specified by `expression` to read additional symbol definitions."
+                },
+                "languageServerPoryscript.trace.server": {
+                    "scope": "window",
+                    "type": "string",
+                    "enum": [
+                        "off",
+                        "messages",
+                        "verbose"
+                    ],
+                    "default": "off",
+                    "description": "Traces the communication between VS Code and the language server."
+                },
+                "languageServerPoryscript.poryscript-pls": {
+                    "type": "object",
+                    "default": {},
+                    "description": "Settings passed down to poryscript-pls server",
+                    "scope": "resource"
+                },
+                "languageServerPoryscript.poryscript-pls.path": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "default": null,
+                    "description": "When specified, uses the poryscript-pls binary at a given path"
+                }
+            }
         }
-      }
+    },
+    "scripts": {
+        "vscode:prepublish": "cd client && cd .. && npm run compile",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w",
+        "postinstall": "cd client && npm install && cd .."
+    },
+    "devDependencies": {
+        "@types/mocha": "^8.2.2",
+        "@types/node": "^12.12.0",
+        "@typescript-eslint/eslint-plugin": "^4.23.0",
+        "@typescript-eslint/parser": "^4.23.0",
+        "eslint": "^7.26.0",
+        "mocha": "^9.2.0",
+        "typescript": "^4.2.3"
+    },
+    "dependencies": {
+        "node-fetch": "^2.6.7"
     }
-  },
-  "scripts": {
-    "vscode:prepublish": "cd client && cd .. && npm run compile",
-    "compile": "tsc -b",
-    "watch": "tsc -b -w",
-    "postinstall": "cd client && npm install && cd .."
-  },
-  "devDependencies": {
-    "@types/mocha": "^8.2.2",
-    "@types/node": "^12.12.0",
-    "@typescript-eslint/eslint-plugin": "^4.23.0",
-    "@typescript-eslint/parser": "^4.23.0",
-    "eslint": "^7.26.0",
-    "mocha": "^9.2.0",
-    "typescript": "^4.2.3"
-  },
-  "dependencies": {
-    "node-fetch": "^2.6.7"
-  }
 }

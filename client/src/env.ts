@@ -1,11 +1,12 @@
-import { pathToFileURL } from "url";
 import * as path from 'path';
 import * as vs from 'vscode';
-import { promisify } from "util";
 import * as fs from 'fs';
+import * as cp from 'child_process';
+
+import { promisify } from "util";
+
 import { download, fetchAvailableReleases } from "./net";
 import { getNewestRelease } from "./util/version";
-import * as cp from 'child_process';
 
 const stat = promisify(fs.stat);
 const mkdir = promisify(fs.mkdir);
@@ -13,7 +14,7 @@ const exec = promisify(cp.exec);
 
 const REQUESTED_MAJOR_VERSION = '0';
 
-export function GetPlsBinaryName() : string | undefined {
+export function getPlsBinaryName() : string | undefined {
     if (process.arch === 'x64' || process.arch === 'ia32') {
         if (process.platform == 'linux') {
             return 'poryscript-pls-linux';
@@ -28,7 +29,7 @@ export function GetPlsBinaryName() : string | undefined {
     return undefined
 }
 
-export function GetPlsDebugBinaryName() : string {
+export function getPlsDebugBinaryName() : string {
     if (process.arch === 'x64' || process.arch === 'ia32') {
         if (process.platform == 'linux' || process.platform === 'darwin') {
             return 'poryscript-pls';
@@ -40,7 +41,7 @@ export function GetPlsDebugBinaryName() : string {
     return undefined
 }
 
-export function GetInstallDir() : string | undefined {
+export function getInstallDir() : string | undefined {
     if (process.platform === 'linux' || process.platform === 'darwin') {
         const { HOME, XDG_DATA_HOME, XDG_BIN_HOME } = process.env;
         if (XDG_BIN_HOME) {
@@ -56,7 +57,7 @@ export function GetInstallDir() : string | undefined {
 }
 
 export async function getServer(askBeforeDownload : boolean) : Promise<string | undefined> {
-    let binaryName = GetPlsBinaryName();
+    let binaryName = getPlsBinaryName();
     if (binaryName === undefined) {
         vs.window.showErrorMessage(
             "We don't ship binaries for your platform yet. " +
@@ -67,7 +68,7 @@ export async function getServer(askBeforeDownload : boolean) : Promise<string | 
         );
         return undefined;
     }
-    const dir = GetInstallDir();
+    const dir = getInstallDir();
     if (!dir) {
         return undefined;
     }

@@ -1,413 +1,413 @@
 {
-	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Poryscript",
-	"patterns": [
-		{
-			"include": "#script"
-		},
-		{
-			"include": "#mapscript"
-		},
-		{
-			"include": "#string"
-		},
-		{
-			"include": "#text"
-		},
-		{
-			"include": "#movement"
-		},
-		{
-			"include": "#comments"
-		},
-		{
-			"include": "#raw"
-		},
-		{
-			"include": "#constant"
-		}
-	],
-	"repository": {
-		"script": {
-			"patterns": [
-				{
-					"begin": "\\b(script)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
-					"beginCaptures": {
-						"1": {
-							"name": "keyword.other.pory"
-						},
-						"2": {
-							"name": "keyword.other.pory"
-						},
-						"3": {
-							"name": "entity.name.function.pory"
-						},
-						"4": {
-							"name": "punctuation.pory"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#inside_script"
-						}
-					],
-					"end": "(})",
-					"endCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					}
-				}
-			]
-		},
-		"text": {
-			"patterns": [
-				{
-					"begin": "\\b(text)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
-					"beginCaptures": {
-						"1": {
-							"name": "keyword.other.pory"
-						},
-						"2": {
-							"name": "keyword.other.pory"
-						},
-						"3": {
-							"name": "entity.name.function.pory"
-						},
-						"4": {
-							"name": "punctuation.pory"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#inside_text"
-						}
-					],
-					"end": "(})",
-					"endCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					}
-				}
-			]
-		},
-		"mapscript": {
-			"patterns": [
-				{
-					"begin": "\\b(mapscripts)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
-					"beginCaptures": {
-						"1": {
-							"name": "keyword.other.pory"
-						},
-						"2": {
-							"name": "keyword.other.pory"
-						},
-						"3": {
-							"name": "entity.name.function.pory"
-						},
-						"4": {
-							"name": "punctuation.pory"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#inside_mapscript"
-						}
-					],
-					"end": "(})",
-					"endCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					}
-				}
-			]
-		},
-		"movement": {
-			"patterns": [
-				{
-					"begin": "\\b(movement)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
-					"beginCaptures": {
-						"1": {
-							"name": "keyword.other.pory"
-						},
-						"2": {
-							"name": "keyword.other.pory"
-						},
-						"3": {
-							"name": "entity.name.function.pory"
-						},
-						"4": {
-							"name": "punctuation.pory"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#inside_movement"
-						}
-					],
-					"end": "(})",
-					"endCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					}
-				}
-			]
-		},
-		"raw": {
-			"patterns": [
-				{
-					"name": "source.arm.embedded.pory",
-					"begin": "\\b(raw)\\b[ \\t]*(`?)",
-					"beginCaptures": {
-						"1": {
-							"name": "keyword.other.pory"
-						},
-						"2": {
-							"name": "string.quoted.double.pory"
-						}
-					},
-					"end": "(`)",
-					"endCaptures": {
-						"1": {
-							"name": "string.quoted.double.pory"
-						}
-					},
-					"patterns": [
-						{
-							"name": "string.quoted.double.pory",
-							"begin": "(?<=.string )\"",
-							"end": "\"",
-							"patterns": [
-								{
-									"name": "constant.character.escape.pory",
-									"match": "\\\\."
-								},
-								{
-									"name": "constant.character.escape.pory",
-									"match": "{[\\w ]+}"
-								},
-								{
-									"name": "constant.character.escape.pory",
-									"match": "\\$"
-								}
-							]
-						},
-						{
-							"include": "source.arm"
-						}
-					]
-				}
-			]
-		},
-		"inside_script": {
-			"patterns": [
-				{
-					"match": "\\b(if|do|while|return|else|elif|end|break|continue|switch|case|default)\\b",
-					"name": "keyword.control.pory"
-				},
-				{
-					"match": "\\b(var|flag|defeated|format|raw|poryswitch)\\b",
-					"name": "keyword.other.pory"
-				},
-				{
-					"begin": "({)",
-					"beginCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#inside_script"
-						}
-					],
-					"end": "(})",
-					"endCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					}
-				},
-				{
-					"include": "#token"
-				},
-				{
-					"include": "#numeric"
-				},
-				{
-					"include": "#string"
-				},
-				{
-					"include": "#comments"
-				}
-			]
-		},
-		"inside_text": {
-			"patterns": [
-				{
-					"match": "\\b(poryswitch)\\b",
-					"name": "keyword.other.pory"
-				},
-				{
-					"include": "#string"
-				},
-				{
-					"include": "#comments"
-				}
-			]
-		},
-		"inside_movement": {
-			"patterns": [
-				{
-					"include": "#token"
-				},
-				{
-					"include": "#numeric"
-				},
-				{
-					"include": "#comments"
-				}
-			]
-		},
-		"inside_mapscript": {
-			"patterns": [
-				{
-					"begin": "({)",
-					"beginCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#inside_script"
-						}
-					],
-					"end": "(})",
-					"endCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					}
-				},
-				{
-					"begin": "(\\[)",
-					"beginCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#inside_mapscript_table"
-						}
-					],
-					"end": "(\\])",
-					"endCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					}
-				},
-				{
-					"include": "#comments"
-				}
-			]
-		},
-		"inside_mapscript_table": {
-			"patterns": [
-				{
-					"begin": "({)",
-					"beginCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					},
-					"patterns": [
-						{
-							"include": "#inside_script"
-						}
-					],
-					"end": "(})",
-					"endCaptures": {
-						"1": {
-							"name": "punctuation.pory"
-						}
-					}
-				},
-				{
-					"include": "#comments"
-				}
-			]
-		},
-		"numeric": {
-			"patterns": [
-				{
-					"match": "\\b(0x[0-9a-fA-F]+|[0-9]+)\\b",
-					"name": "constant.numeric.pory"
-				},
-				{
-					"match": "\\b(true|false|TRUE|FALSE)\\b",
-					"name": "constant.language.pory"
-				}
-			]
-		},
-		"token": {
-			"patterns": [
-				{
-					"match": "(\\*|<=|<|>=|>|==|!=|!)",
-					"name": "keyword.operator.pory"
-				}
-			]
-		},
-		"string": {
-			"name": "string.quoted.double.pory",
-			"begin": "\"",
-			"end": "\"",
-			"patterns": [
-				{
-					"name": "constant.character.escape.pory",
-					"match": "\\\\."
-				},
-				{
-					"name": "constant.character.escape.pory",
-					"match": "{[\\w ]+}"
-				}
-			]
-		},
-		"comments": {
-			"patterns": [
-				{
-					"name": "comment.line.double-slash.pory",
-					"match": "(//).*$\n?"
-				},
-				{
-					"name": "comment.line.number-sign.pory",
-					"match": "(#).*$\n?"
-				}
-			]
-		},
-		"constant": {
-			"patterns": [
-				{
-					"match": "\\b(const)\\b[ \\t]*\\b([aA-zZ_0-9]*)\\b[ \\t]*(?:=[ \\t]*([aA-zZ_0-9]*))*",
-					"captures": {
-						"1": {
-							"name": "keyword.control.directive.const.pory"
-						},
-						"2": {
-							"name": "entity.name.function.preprocessor.pory"
-						},
-						"3": {
-							"name": "meta.preprocessor.macro.pory"
-						}
-					}
-				}
-			]
-		}
-	},
-	"scopeName": "source.pory"
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Poryscript",
+    "patterns": [
+        {
+            "include": "#script"
+        },
+        {
+            "include": "#mapscript"
+        },
+        {
+            "include": "#string"
+        },
+        {
+            "include": "#text"
+        },
+        {
+            "include": "#movement"
+        },
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#raw"
+        },
+        {
+            "include": "#constant"
+        }
+    ],
+    "repository": {
+        "script": {
+            "patterns": [
+                {
+                    "begin": "\\b(script)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.other.pory"
+                        },
+                        "2": {
+                            "name": "keyword.other.pory"
+                        },
+                        "3": {
+                            "name": "entity.name.function.pory"
+                        },
+                        "4": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_script"
+                        }
+                    ],
+                    "end": "(})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                }
+            ]
+        },
+        "text": {
+            "patterns": [
+                {
+                    "begin": "\\b(text)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.other.pory"
+                        },
+                        "2": {
+                            "name": "keyword.other.pory"
+                        },
+                        "3": {
+                            "name": "entity.name.function.pory"
+                        },
+                        "4": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_text"
+                        }
+                    ],
+                    "end": "(})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                }
+            ]
+        },
+        "mapscript": {
+            "patterns": [
+                {
+                    "begin": "\\b(mapscripts)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.other.pory"
+                        },
+                        "2": {
+                            "name": "keyword.other.pory"
+                        },
+                        "3": {
+                            "name": "entity.name.function.pory"
+                        },
+                        "4": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_mapscript"
+                        }
+                    ],
+                    "end": "(})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                }
+            ]
+        },
+        "movement": {
+            "patterns": [
+                {
+                    "begin": "\\b(movement)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.other.pory"
+                        },
+                        "2": {
+                            "name": "keyword.other.pory"
+                        },
+                        "3": {
+                            "name": "entity.name.function.pory"
+                        },
+                        "4": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_movement"
+                        }
+                    ],
+                    "end": "(})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                }
+            ]
+        },
+        "raw": {
+            "patterns": [
+                {
+                    "name": "source.arm.embedded.pory",
+                    "begin": "\\b(raw)\\b[ \\t]*(`?)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.other.pory"
+                        },
+                        "2": {
+                            "name": "string.quoted.double.pory"
+                        }
+                    },
+                    "end": "(`)",
+                    "endCaptures": {
+                        "1": {
+                            "name": "string.quoted.double.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "name": "string.quoted.double.pory",
+                            "begin": "(?<=.string )\"",
+                            "end": "\"",
+                            "patterns": [
+                                {
+                                    "name": "constant.character.escape.pory",
+                                    "match": "\\\\."
+                                },
+                                {
+                                    "name": "constant.character.escape.pory",
+                                    "match": "{[\\w ]+}"
+                                },
+                                {
+                                    "name": "constant.character.escape.pory",
+                                    "match": "\\$"
+                                }
+                            ]
+                        },
+                        {
+                            "include": "source.arm"
+                        }
+                    ]
+                }
+            ]
+        },
+        "inside_script": {
+            "patterns": [
+                {
+                    "match": "\\b(if|do|while|return|else|elif|end|break|continue|switch|case|default)\\b",
+                    "name": "keyword.control.pory"
+                },
+                {
+                    "match": "\\b(var|flag|defeated|format|raw|poryswitch)\\b",
+                    "name": "keyword.other.pory"
+                },
+                {
+                    "begin": "({)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_script"
+                        }
+                    ],
+                    "end": "(})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                },
+                {
+                    "include": "#token"
+                },
+                {
+                    "include": "#numeric"
+                },
+                {
+                    "include": "#string"
+                },
+                {
+                    "include": "#comments"
+                }
+            ]
+        },
+        "inside_text": {
+            "patterns": [
+                {
+                    "match": "\\b(poryswitch)\\b",
+                    "name": "keyword.other.pory"
+                },
+                {
+                    "include": "#string"
+                },
+                {
+                    "include": "#comments"
+                }
+            ]
+        },
+        "inside_movement": {
+            "patterns": [
+                {
+                    "include": "#token"
+                },
+                {
+                    "include": "#numeric"
+                },
+                {
+                    "include": "#comments"
+                }
+            ]
+        },
+        "inside_mapscript": {
+            "patterns": [
+                {
+                    "begin": "({)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_script"
+                        }
+                    ],
+                    "end": "(})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                },
+                {
+                    "begin": "(\\[)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_mapscript_table"
+                        }
+                    ],
+                    "end": "(\\])",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                },
+                {
+                    "include": "#comments"
+                }
+            ]
+        },
+        "inside_mapscript_table": {
+            "patterns": [
+                {
+                    "begin": "({)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_script"
+                        }
+                    ],
+                    "end": "(})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                },
+                {
+                    "include": "#comments"
+                }
+            ]
+        },
+        "numeric": {
+            "patterns": [
+                {
+                    "match": "\\b(0x[0-9a-fA-F]+|[0-9]+)\\b",
+                    "name": "constant.numeric.pory"
+                },
+                {
+                    "match": "\\b(true|false|TRUE|FALSE)\\b",
+                    "name": "constant.language.pory"
+                }
+            ]
+        },
+        "token": {
+            "patterns": [
+                {
+                    "match": "(\\*|<=|<|>=|>|==|!=|!)",
+                    "name": "keyword.operator.pory"
+                }
+            ]
+        },
+        "string": {
+            "name": "string.quoted.double.pory",
+            "begin": "\"",
+            "end": "\"",
+            "patterns": [
+                {
+                    "name": "constant.character.escape.pory",
+                    "match": "\\\\."
+                },
+                {
+                    "name": "constant.character.escape.pory",
+                    "match": "{[\\w ]+}"
+                }
+            ]
+        },
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-slash.pory",
+                    "match": "(//).*$\n?"
+                },
+                {
+                    "name": "comment.line.number-sign.pory",
+                    "match": "(#).*$\n?"
+                }
+            ]
+        },
+        "constant": {
+            "patterns": [
+                {
+                    "match": "\\b(const)\\b[ \\t]*\\b([aA-zZ_0-9]*)\\b[ \\t]*(?:=[ \\t]*([aA-zZ_0-9]*))*",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.control.directive.const.pory"
+                        },
+                        "2": {
+                            "name": "entity.name.function.preprocessor.pory"
+                        },
+                        "3": {
+                            "name": "meta.preprocessor.macro.pory"
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "scopeName": "source.pory"
 }
