@@ -87,7 +87,7 @@ export async function getServer(askBeforeDownload : boolean) : Promise<string | 
         if (bestFittingRelease.name === currentVersion)
             return dest;
         if (askBeforeDownload) {
-            const userResponse = await vs.window.showErrorMessage(`A new version of poryscript-pls was found.\nDownload version ${bestFittingRelease.name} to ${dir}?`, 'Download', 'Skip');
+            const userResponse = await vs.window.showInformationMessage(`A new version of poryscript-pls was found.\nDownload version ${bestFittingRelease.name} to ${dir}?`, 'Download', 'Skip');
             if (userResponse !== 'Download')
                 return dest;
         }
@@ -97,6 +97,7 @@ export async function getServer(askBeforeDownload : boolean) : Promise<string | 
         }
     
         await download(artifact.browser_download_url, dest, 'Downloading poryscript-pls', {mode: 0o755});
+        return dest;
     }
 
     if (askBeforeDownload) {
