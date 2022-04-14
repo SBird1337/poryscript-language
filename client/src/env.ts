@@ -12,7 +12,7 @@ const stat = promisify(fs.stat);
 const mkdir = promisify(fs.mkdir);
 const exec = promisify(cp.exec);
 
-const REQUESTED_MAJOR_VERSION = '0';
+const REQUESTED_MAJOR_VERSION = '1';
 
 export function getPlsBinaryName() : string | undefined {
     if (process.arch === 'x64' || process.arch === 'ia32') {

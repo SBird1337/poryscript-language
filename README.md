@@ -1,10 +1,16 @@
 # Poryscript Language Extension
 
-This is a basic language extension for Poryscript. (https://github.com/huderlem/poryscript)
+Language client for `poryscript`. (https://github.com/huderlem/poryscript)
 
-At this basic stage it supports basic Syntax Highlighting
+Uses the language server `poryscript-pls` (https://github.com/huderlem/poryscript-pls)
 
 ## Configuration
+
+### Custom poryscript-pls
+
+Normally the binaries of `poryscript-pls` for your platform will automatically be installed. If we do not ship binaries for your platform or you want to use a custom version you can supply a custom binary path in `languageServerPoryscript.poryscript-pls.path`.
+
+### Event/Movement macros
 
 The extension parses files like `event.inc` and `movement.inc` to provide completion hints on your LSP client. (Visual Studio Code)
 It needs to know where those files are with respect to your root workspace. To do so, it reads the property `languageServerPoryscript.commandIncludes` of your `settings.json`.
@@ -18,6 +24,8 @@ If the field is not set it defaults to the following setting:
     ]
 }
 ```
+
+### Auxillary Semantic Highlighting
 
 The extension also parses customizable files to read values usually present when working with `poryscript`. A few are included in the default settings, but new ones can be configured or changed at will. Each entry contains a regular `expression`, a type which can be `special` or `define` and a `file` path. The first match group of the regular expression will be treated as the name of the defined token. The second group will be treated as a detail in the completion hint window. The default settings are:
 
@@ -65,10 +73,6 @@ The extension also parses customizable files to read values usually present when
 ## Requirements
 
 * Visual Studio Code ^1.44.0
-
-## Known Issues
-
-* Extension settings are read relatively to your root workpace, therefore this does not work in a multi-workspace environment.
 
 ## Release Notes
 
