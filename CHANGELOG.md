@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2022-06-16
+
+ * Add `mart` environment to grammar
 ## [3.0.0] - 2022-04-14
 
 ### Added

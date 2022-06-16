@@ -78,6 +78,9 @@ The extension also parses customizable files to read values usually present when
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 3.0.1
+
+* Add `mart` environment to grammar
 ### 3.0.0
 
 * Substitute internal typescript language service provider for [poryscript-pls](https://github.com/huderlem/poryscript-pls)
