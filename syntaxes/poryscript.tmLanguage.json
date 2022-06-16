@@ -18,6 +18,9 @@
             "include": "#movement"
         },
         {
+            "include": "#mart"
+        },
+        {
             "include": "#comments"
         },
         {
@@ -156,6 +159,38 @@
                 }
             ]
         },
+        "mart": {
+            "patterns": [
+                {
+                    "begin": "\\b(mart)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.other.pory"
+                        },
+                        "2": {
+                            "name": "keyword.other.pory"
+                        },
+                        "3": {
+                            "name": "entity.name.function.pory"
+                        },
+                        "4": {
+                            "name": "punctuation.pory"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#inside_mart"
+                        }
+                    ],
+                    "end": "(})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.pory"
+                        }
+                    }
+                }
+            ]
+        },
         "raw": {
             "patterns": [
                 {
@@ -266,6 +301,16 @@
                 },
                 {
                     "include": "#numeric"
+                },
+                {
+                    "include": "#comments"
+                }
+            ]
+        },
+        "inside_mart": {
+            "patterns": [
+                {
+                    "include": "#token"
                 },
                 {
                     "include": "#comments"
