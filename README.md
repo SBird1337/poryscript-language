@@ -10,6 +10,10 @@ Uses the language server `poryscript-pls` (https://github.com/huderlem/poryscrip
 
 Normally the binaries of `poryscript-pls` for your platform will automatically be installed. If we do not ship binaries for your platform or you want to use a custom version you can supply a custom binary path in `languageServerPoryscript.poryscript-pls.path`.
 
+### Custom Poryscript Command Configuration Filepath
+
+Poryscript ships with a default `command_config.json` file, which is what defines the available autovar commands. This filepath defaults to `tools/poryscript/command_config.json`, but this can be overriden.
+
 ### Event/Movement macros
 
 The extension parses files like `event.inc` and `movement.inc` to provide completion hints on your LSP client. (Visual Studio Code)

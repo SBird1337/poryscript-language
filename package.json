@@ -2,7 +2,7 @@
     "name": "poryscript",
     "displayName": "Poryscript",
     "description": "Syntax highlighting for Poryscript script language",
-    "version": "3.0.1",
+    "version": "3.1.0",
     "publisher": "karathan",
     "license": "MIT",
     "repository": {
@@ -77,7 +77,7 @@
                         "asm/macros/event.inc",
                         "asm/macros/movement.inc"
                     ],
-                    "description": "Macro Files that should be read and handled by the IntelliSense of the langauge server."
+                    "description": "Macro Files that should be read and handled by the IntelliSense of the language server."
                 },
                 "languageServerPoryscript.symbolIncludes": {
                     "scope": "resource",
@@ -120,6 +120,12 @@
                         }
                     ],
                     "description": "Files that are read as specified by `expression` to read additional symbol definitions."
+                },
+                "languageServerPoryscript.commandConfigFilepath": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "tools/poryscript/command_config.json",
+                    "description": "The filepath for Poryscript's command config file (command_config.json). This is the file that defines the available autovar commands."
                 },
                 "languageServerPoryscript.trace.server": {
                     "scope": "window",
