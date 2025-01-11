@@ -6,7 +6,7 @@
             "include": "#script"
         },
         {
-            "include": "#mapscript"
+            "include": "#mapscripts"
         },
         {
             "include": "#string"
@@ -34,7 +34,7 @@
         "script": {
             "patterns": [
                 {
-                    "begin": "\\b(script)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "begin": "\\b(script)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*",
                     "beginCaptures": {
                         "1": {
                             "name": "keyword.other.pory"
@@ -51,22 +51,36 @@
                     },
                     "patterns": [
                         {
-                            "include": "#inside_script"
+                            "include": "#script_block"
                         }
                     ],
-                    "end": "(})",
-                    "endCaptures": {
-                        "1": {
-                            "name": "punctuation.pory"
-                        }
-                    }
+                    "end": "(?<=\\})"
+                }
+            ]
+        },
+        "script_block": {
+            "begin": "\\{",
+            "beginCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "end": "\\}",
+            "endCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#inside_script"
                 }
             ]
         },
         "text": {
             "patterns": [
                 {
-                    "begin": "\\b(text)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "begin": "\\b(text)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*",
                     "beginCaptures": {
                         "1": {
                             "name": "keyword.other.pory"
@@ -76,29 +90,40 @@
                         },
                         "3": {
                             "name": "entity.name.function.pory"
-                        },
-                        "4": {
-                            "name": "punctuation.pory"
                         }
                     },
                     "patterns": [
                         {
-                            "include": "#inside_text"
+                            "include": "#text_block"
                         }
                     ],
-                    "end": "(})",
-                    "endCaptures": {
-                        "1": {
-                            "name": "punctuation.pory"
-                        }
-                    }
+                    "end": "(?<=\\})"
                 }
             ]
         },
-        "mapscript": {
+        "text_block": {
+            "begin": "\\{",
+            "beginCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "end": "\\}",
+            "endCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
             "patterns": [
                 {
-                    "begin": "\\b(mapscripts)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "include": "#inside_text"
+                }
+            ]
+        },
+        "mapscripts": {
+            "patterns": [
+                {
+                    "begin": "\\b(mapscripts)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*",
                     "beginCaptures": {
                         "1": {
                             "name": "keyword.other.pory"
@@ -108,29 +133,40 @@
                         },
                         "3": {
                             "name": "entity.name.function.pory"
-                        },
-                        "4": {
-                            "name": "punctuation.pory"
                         }
                     },
                     "patterns": [
                         {
-                            "include": "#inside_mapscript"
+                            "include": "#mapscripts_block"
                         }
                     ],
-                    "end": "(})",
-                    "endCaptures": {
-                        "1": {
-                            "name": "punctuation.pory"
-                        }
-                    }
+                    "end": "(?<=\\})"
+                }
+            ]
+        },
+        "mapscripts_block": {
+            "begin": "\\{",
+            "beginCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "end": "\\}",
+            "endCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#inside_mapscripts"
                 }
             ]
         },
         "movement": {
             "patterns": [
                 {
-                    "begin": "\\b(movement)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "begin": "\\b(movement)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*",
                     "beginCaptures": {
                         "1": {
                             "name": "keyword.other.pory"
@@ -147,22 +183,36 @@
                     },
                     "patterns": [
                         {
-                            "include": "#inside_movement"
+                            "include": "#movement_block"
                         }
                     ],
-                    "end": "(})",
-                    "endCaptures": {
-                        "1": {
-                            "name": "punctuation.pory"
-                        }
-                    }
+                    "end": "(?<=\\})"
+                }
+            ]
+        },
+        "movement_block": {
+            "begin": "\\{",
+            "beginCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "end": "\\}",
+            "endCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#inside_movement"
                 }
             ]
         },
         "mart": {
             "patterns": [
                 {
-                    "begin": "\\b(mart)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*({?)",
+                    "begin": "\\b(mart)\\b(?:\\((global|local)\\))*\\s*\\b([aA-zZ_0-9]*)\\b\\s*",
                     "beginCaptures": {
                         "1": {
                             "name": "keyword.other.pory"
@@ -179,15 +229,29 @@
                     },
                     "patterns": [
                         {
-                            "include": "#inside_mart"
+                            "include": "#mart_block"
                         }
                     ],
-                    "end": "(})",
-                    "endCaptures": {
-                        "1": {
-                            "name": "punctuation.pory"
-                        }
-                    }
+                    "end": "(?<=\\})"
+                }
+            ]
+        },
+        "mart_block": {
+            "begin": "\\{",
+            "beginCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "end": "\\}",
+            "endCaptures": {
+                "0": {
+                    "name": "punctuation.pory"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#inside_mart"
                 }
             ]
         },
@@ -317,7 +381,7 @@
                 }
             ]
         },
-        "inside_mapscript": {
+        "inside_mapscripts": {
             "patterns": [
                 {
                     "begin": "({)",
@@ -347,7 +411,7 @@
                     },
                     "patterns": [
                         {
-                            "include": "#inside_mapscript_table"
+                            "include": "#inside_mapscripts_table"
                         }
                     ],
                     "end": "(\\])",
@@ -362,7 +426,7 @@
                 }
             ]
         },
-        "inside_mapscript_table": {
+        "inside_mapscripts_table": {
             "patterns": [
                 {
                     "begin": "({)",
