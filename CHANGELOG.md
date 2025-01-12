@@ -7,34 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.1] - 2025-01-12
+
+* Fix highlighting with top-level opening braces occur on a different line (#26)
+
 ## [3.1.0] - 2024-08-15
 
-  * Add command config filepath setting to support autovar commands
+* Add command config filepath setting to support autovar commands
 
 ## [3.0.1] - 2022-06-16
 
- * Add `mart` environment to grammar
+* Add `mart` environment to grammar
+
 ## [3.0.0] - 2022-04-14
 
 ### Added
 
- * Adds support for poryscript compiler diagnostics
- * `raw` statements are now collapsable
+* Adds support for poryscript compiler diagnostics
+* `raw` statements are now collapsable
 
 ### Breaking
 
- * Substitute internal typescript language service provider for [poryscript-pls](https://github.com/huderlem/poryscript-pls)
+* Substitute internal typescript language service provider for [poryscript-pls](https://github.com/huderlem/poryscript-pls)
 
 ## [2.3.0] - 2022-02-11
 
 ### Fixed
 
- * npm audit fix
- * movement constant loading updated for modern pret-style repositories
+* npm audit fix
+* movement constant loading updated for modern pret-style repositories
 
 ### Added
 
- * Language Support for assembly style scrips (Language `Poryasm`)
+* Language Support for assembly style scrips (Language `Poryasm`)
 
 ## [2.2.1] - 2021-10-09
 

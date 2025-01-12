@@ -82,6 +82,10 @@ The extension also parses customizable files to read values usually present when
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+### 3.1.1
+
+* Fix highlighting with top-level opening braces occur on a different line (#26)
+
 ### 3.1.0
 
 * Add command config filepath setting to support autovar commands

@@ -2,7 +2,7 @@
     "name": "poryscript",
     "displayName": "Poryscript",
     "description": "Syntax highlighting for Poryscript script language",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "publisher": "karathan",
     "license": "MIT",
     "repository": {
