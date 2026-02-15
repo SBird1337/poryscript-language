@@ -121,6 +121,12 @@
                     ],
                     "description": "Files that are read as specified by `expression` to read additional symbol definitions."
                 },
+                "languageServerPoryscript.fontConfigFilepath": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "tools/poryscript/font_config.json",
+                    "description": "The filepath for Poryscript's font config file (font_config.json)."
+                },
                 "languageServerPoryscript.commandConfigFilepath": {
                     "scope": "resource",
                     "type": "string",
