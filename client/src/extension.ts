@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as url from "url";
 
-import { workspace, ExtensionContext, Uri } from 'vscode';
+import { workspace, ExtensionContext, Uri, window, TextEditorDecorationType, DecorationRangeBehavior, Diagnostic, DecorationOptions, MarkdownString } from 'vscode';
 import {
     Executable,
     LanguageClient,
@@ -14,8 +14,30 @@ import { getServer } from './env';
 import { getPlsDebugBinaryName } from './env';
 
 let client: LanguageClient;
+let lineTooLongDecoration: TextEditorDecorationType;
+
+function applyLineTooLongDecorations(uri: Uri, diagnostics: Diagnostic[]) {
+    const editor = window.visibleTextEditors.find(
+        e => e.document.uri.toString() === uri.toString()
+    );
+    if (!editor) {
+        return;
+    }
+    const decorations: DecorationOptions[] = diagnostics.map(d => ({
+        range: d.range,
+        hoverMessage: new MarkdownString(d.message),
+    }));
+    editor.setDecorations(lineTooLongDecoration, decorations);
+}
 
 export async function activate(context: ExtensionContext) {
+    lineTooLongDecoration = window.createTextEditorDecorationType({
+        backgroundColor: '#E69F0030',
+        border: '1px solid #E69F00'
+    });
+
+    context.subscriptions.push(lineTooLongDecoration);
+
     const configuration = workspace.getConfiguration();
     const customBinPath = configuration.get<string>("languageServerPoryscript.poryscript-pls.path");
     const debugPlsPath = context.asAbsolutePath(path.join('poryscript-pls', getPlsDebugBinaryName()))
@@ -47,6 +69,21 @@ export async function activate(context: ExtensionContext) {
         synchronize: {
             // Notify the server about file changes to *.inc, *.pory, *.h files contained in the workspace
             fileEvents: [workspace.createFileSystemWatcher('**/*.inc'), workspace.createFileSystemWatcher('**/*.pory'), workspace.createFileSystemWatcher('**/*.h')]
+        },
+        middleware: {
+            handleDiagnostics(uri, diagnostics, next) {
+                const lineTooLongDiags: typeof diagnostics = [];
+                const otherDiags: typeof diagnostics = [];
+                for (const diag of diagnostics) {
+                    if (diag.code === 'warning-lineTooLong') {
+                        lineTooLongDiags.push(diag);
+                    } else {
+                        otherDiags.push(diag);
+                    }
+                }
+                applyLineTooLongDecorations(uri, lineTooLongDiags);
+                next(uri, otherDiags);
+            }
         }
     };
 
