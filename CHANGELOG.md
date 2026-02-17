@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-17-02
+
+### Added
+
+* Support for text length diagnostics from poryscript-pls (#34 by huderlem)
+
+### Fixed
+
+* Bumped dependencies to mitigate potential security vulnerabilities
+
 ## [3.1.1] - 2025-01-12
 
 * Fix highlighting with top-level opening braces occur on a different line (#26)
