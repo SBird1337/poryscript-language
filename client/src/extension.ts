@@ -15,6 +15,7 @@ import { getPlsDebugBinaryName } from './env';
 
 let client: LanguageClient;
 let lineTooLongDecoration: TextEditorDecorationType;
+let lineSafeDecoration: TextEditorDecorationType;
 
 function applyLineTooLongDecorations(uri: Uri, diagnostics: Diagnostic[]) {
     const editor = window.visibleTextEditors.find(
@@ -30,13 +31,32 @@ function applyLineTooLongDecorations(uri: Uri, diagnostics: Diagnostic[]) {
     editor.setDecorations(lineTooLongDecoration, decorations);
 }
 
+function applyLineSafeDecorations(uri: Uri, diagnostics: Diagnostic[]) {
+    const editor = window.visibleTextEditors.find(
+        e => e.document.uri.toString() === uri.toString()
+    );
+    if (!editor) {
+        return;
+    }
+    const decorations: DecorationOptions[] = diagnostics.map(d => ({
+        range: d.range,
+        hoverMessage: new MarkdownString(d.message),
+    }));
+    editor.setDecorations(lineSafeDecoration, decorations);
+}
+
 export async function activate(context: ExtensionContext) {
     lineTooLongDecoration = window.createTextEditorDecorationType({
         backgroundColor: '#E69F0030',
         border: '1px solid #E69F00'
     });
+    lineSafeDecoration = window.createTextEditorDecorationType({
+        backgroundColor: '#007ACC30',
+        border: '1px solid #007ACC'
+    });
 
     context.subscriptions.push(lineTooLongDecoration);
+    context.subscriptions.push(lineSafeDecoration);
 
     const configuration = workspace.getConfiguration();
     const customBinPath = configuration.get<string>("languageServerPoryscript.poryscript-pls.path");
@@ -73,15 +93,19 @@ export async function activate(context: ExtensionContext) {
         middleware: {
             handleDiagnostics(uri, diagnostics, next) {
                 const lineTooLongDiags: typeof diagnostics = [];
+                const lineSafeDiags: typeof diagnostics = [];
                 const otherDiags: typeof diagnostics = [];
                 for (const diag of diagnostics) {
                     if (diag.code === 'warning-lineTooLong') {
                         lineTooLongDiags.push(diag);
+                    } else if (diag.code === 'safe-lineTooLong') {
+                        lineSafeDiags.push(diag);
                     } else {
                         otherDiags.push(diag);
                     }
                 }
                 applyLineTooLongDecorations(uri, lineTooLongDiags);
+                applyLineSafeDecorations(uri, lineSafeDiags);
                 next(uri, otherDiags);
             }
         }
