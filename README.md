@@ -82,6 +82,10 @@ The extension also parses customizable files to read values usually present when
 
 Please view the [CHANGELOG](CHANGELOG.md) for a full list of changes.
 
+## 3.3.0
+
+* Support for safe font width custom string decoration (Ddaretrogamer #46)
+
 ### 3.2.0
 
 * Support for text length diagnostics from poryscript-pls (#34 by huderlem)

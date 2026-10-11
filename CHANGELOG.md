@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-12-10
+
+### Added
+
+* Support for safe font width custom string decoration (Ddaretrogamer #46)
+
+### Fixed
+
+* Bumped dependencies to mitigate potential security vulnerabilities
+
 ## [3.2.0] - 2026-17-02
 
 ### Added
