@@ -96,7 +96,7 @@ export async function activate(context: ExtensionContext) {
     );
     client.onReady().then(() => {
         client.onRequest("poryscript/readfile", file => {
-            let openPath = path.join(workspace.workspaceFolders[0].uri.fsPath, file);
+            let openPath = path.join(workspace.workspaceFolders![0].uri.fsPath, file);
             if (fs.existsSync(openPath)) {
                 let uri = Uri.file(openPath);
                 return workspace.openTextDocument(uri).then(doc => doc.getText());
@@ -111,11 +111,11 @@ export async function activate(context: ExtensionContext) {
             }
         });
         client.onRequest("poryscript/getPoryscriptFiles", async () => {
-            let folder = workspace.workspaceFolders[0];
+            let folder = workspace.workspaceFolders![0];
             return await (await workspace.findFiles("**/*.{pory}", null, 1024)).map(uri => uri.path);
         });
         client.onRequest("poryscript/getfileuri", file => {
-            return url.pathToFileURL(path.join(workspace.workspaceFolders[0].uri.fsPath, file)).toString();
+            return url.pathToFileURL(path.join(workspace.workspaceFolders![0].uri.fsPath, file)).toString();
         });
     });
     client.start();
